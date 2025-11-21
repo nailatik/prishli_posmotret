@@ -48,3 +48,5 @@ async def create_post(session: AsyncSession, user_id: int,content: str,picture: 
 
     return db_post
 
+
+
