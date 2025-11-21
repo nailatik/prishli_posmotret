@@ -9,4 +9,5 @@ class Post(Base):
     user_id = Column(Integer)
     content = Column(String, nullable=False)
     picture = Column(String)
+    likes_count = Column(Integer, default=0, nullable=False)
 

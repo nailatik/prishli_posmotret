@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Bool
 
 from .base import Base
 
-DEFAULT_AVATAR_URL = ""
+DEFAULT_AVATAR_URL = "https://avatars.mds.yandex.net/get-yapic/28053/0UUBdbP24UkTBwP8eAKf2S04o-1/orig"
 
 class UserData(Base):
     __tablename__ = "user_data"
