@@ -1,4 +1,5 @@
 from typing import Annotated
+from pydantic import BaseModel
 
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
@@ -21,18 +22,21 @@ from ..dependencies import get_current_user
 router = APIRouter()
 
 
+class SignUpRequest(BaseModel):
+    username: str
+    password: str
+
+
 @router.post('/sign-up')
 async def sign_up(
-    username: str,
-    password: str,
+    signup_data: SignUpRequest,
     session: Annotated[AsyncSession, Depends(get_db)],
 ):
-    user = await create_user(session, username=username, password=password)
+    user = await create_user(session, username=signup_data.username, password=signup_data.password)
 
     return {
         "id": user.user_id,
         "username": user.username,
-        "hashed_password": user.hashed_password,
     }
 
 
