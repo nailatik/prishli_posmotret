@@ -38,11 +38,9 @@ async def get_db():
 
 async def get_all_posts(session: AsyncSession):
     stmt = select(
-        Post.post_id,
         Post.user_id,
+        Post.title,
         Post.content,
-        Post.picture,
-        Post.likes_count,
     ).order_by(desc(Post.post_id))
 
     result = await session.execute(stmt)
@@ -50,19 +48,25 @@ async def get_all_posts(session: AsyncSession):
 
     posts = [
         {
-            "post_id": row.post_id,
-            "user_id": row.user_id,
-            "content": row.content,
-            "picture": row.picture,
-            "likes_count": row.likes_count,
+            "author": await get_user_by_id(session, row.user_id),
+            "title": row.title,
+            "description": row.content
         }
         for row in rows
     ]
+    print(posts)
 
     return posts
 
-async def create_post(session: AsyncSession, user_id: int, content: str, picture: str): 
-    db_post = Post(user_id=user_id, content=content, picture=picture)
+async def get_user_by_id(session: AsyncSession, id):
+    stmt = select(User).where(User.user_id == id)
+    result = await session.execute(stmt)
+    user = result.scalar_one_or_none()
+
+    return user
+
+async def create_post(session: AsyncSession, user_id: int, title: str, content: str): 
+    db_post = Post(user_id=user_id, title=title, content=content)
     session.add(db_post)
     await session.commit()
     await session.refresh(db_post)
@@ -119,12 +123,7 @@ async def get_all_users_data(session: AsyncSession):
 
     return users
 
-async def get_user_by_id(session: AsyncSession, id):
-    stmt = select(User).where(User.User_id == id)
-    result = await session.execute(stmt)
-    user = result.scalar_one_or_none()
 
-    return user
 
 async def get_user_data_by_id(session: AsyncSession, id):
     stmt = select(UserData).where(UserData.user_id == id)

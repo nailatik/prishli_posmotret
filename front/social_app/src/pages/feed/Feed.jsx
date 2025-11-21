@@ -1,52 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useApi } from '../../hooks/useApi'
 import Header from '../../components/header/Header'
 import Sidebar from '../../components/sidebar/Sidebar'
 import FeedList from '../../components/FeedList'
 import './Feed.css'
 
 function Feed() {
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      imgSrc: 'https://img.freepik.com/free-photo/cute-beagle-dark-brown-bow-tie_53876-89059.jpg?semt=ais_hybrid&w=740&q=80',
-      author: 'Игорь Дорохов',
-      avatarSrc: 'https://randomuser.me/api/portraits/men/34.jpg',
-      title: 'Пушистый друг дня!',
-      description: 'Щенок впервые гуляет на даче. Очень любопытный и фотогеничный.'
-    },
-    {
-      id: 2,
-      imgSrc: 'https://img.freepik.com/free-photo/cute-beagle-dark-brown-bow-tie_53876-89059.jpg?semt=ais_hybrid&w=740&q=80',
-      author: 'Игорь Дорохов',
-      avatarSrc: 'https://randomuser.me/api/portraits/men/34.jpg',
-      title: 'Пушистый друг дня!',
-      description: 'Щенок впервые гуляет на даче. Очень любопытный и фотогеничный.'
-    },
-    {
-      id: 3,
-      imgSrc: 'https://img.freepik.com/free-photo/cute-beagle-dark-brown-bow-tie_53876-89059.jpg?semt=ais_hybrid&w=740&q=80',
-      author: 'Игорь Дорохов',
-      avatarSrc: 'https://randomuser.me/api/portraits/men/34.jpg',
-      title: 'Пушистый друг дня!',
-      description: 'Щенок впервые гуляет на даче. Очень любопытный и фотогеничный.'
-    },
-    {
-      id: 4,
-      imgSrc: 'https://img.freepik.com/free-photo/cute-beagle-dark-brown-bow-tie_53876-89059.jpg?semt=ais_hybrid&w=740&q=80',
-      author: 'Игорь Дорохов',
-      avatarSrc: 'https://randomuser.me/api/portraits/men/34.jpg',
-      title: 'Пушистый друг дня!',
-      description: 'Щенок впервые гуляет на даче. Очень любопытный и фотогеничный.'
-    },
-    {
-      id: 5,
-      imgSrc: 'https://img.freepik.com/free-photo/cute-beagle-dark-brown-bow-tie_53876-89059.jpg?semt=ais_hybrid&w=740&q=80',
-      author: 'Игорь Дорохов',
-      avatarSrc: 'https://randomuser.me/api/portraits/men/34.jpg',
-      title: 'Пушистый друг дня!',
-      description: 'Щенок впервые гуляет на даче. Очень любопытный и фотогеничный.'
-    },
-  ])
+  const { makeRequest } = useApi()
+  const [posts, setPosts] = useState([]) 
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const data = await makeRequest('posts') 
+        setPosts(data) 
+      } catch (error) {
+        console.error('Ошибка при получении постов:', error)
+      }
+    }
+
+    fetchPosts()
+  }, []) 
 
   // Заглушки для обработки лайка и комментария
   const handleLike = id => {

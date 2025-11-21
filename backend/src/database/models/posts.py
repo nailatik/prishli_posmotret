@@ -7,7 +7,8 @@ class Post(Base):
 
     post_id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
+    title = Column(String, nullable=False)
     content = Column(String, nullable=False)
-    picture = Column(String)
+    picture = Column(String, nullable=True, default=None)
     likes_count = Column(Integer, default=0, nullable=False)
 

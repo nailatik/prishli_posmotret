@@ -31,7 +31,7 @@ async def create_post(
     session: Annotated[AsyncSession, Depends(get_db)]
 ):
     try:
-        post = await create_post_db(session=session, user_id=1, content="Hell", picture="Hell nah")
+        post = await create_post_db(session=session, user_id=1, title="Title test", content="Content testing")
         return {
             "post_id": post.post_id,
             "user_id": post.user_id,
