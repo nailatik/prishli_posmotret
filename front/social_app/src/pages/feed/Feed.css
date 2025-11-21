@@ -1,7 +1,6 @@
 .feed {
   background-color: #E8E8E8;
   min-height: 100vh;
-  height: 100vh;         /* важно: занимать полностью экран! */
   padding-top: 80px;  
 }
 

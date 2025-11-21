@@ -28,10 +28,11 @@ function Header() {
       <div className="header-container">
         {/* Навигация */}
         <nav className="header-nav">
-          <Link to="/">Моя страница</Link>
-          <Link to="/profile">Новости</Link>
+          <Link to="/profile">Моя страница</Link>
+          <Link to="/">Новости</Link>
           <Link to="/messages">Сообщения</Link>
           <Link to="/friends">Мои друзья</Link>
+          <Link to="/communities">Сообщества</Link>
           <Link to="/music">Музыка</Link>
         </nav>
       </div>

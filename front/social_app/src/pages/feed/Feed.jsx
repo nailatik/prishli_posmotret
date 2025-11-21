@@ -37,7 +37,7 @@ function Feed() {
       <Header />
       <div className="feed-container">
         <div className="feed-left">
-          <h1 className="feed-title">Мои новости</h1>
+          <h1 className="feed-title">Мои Новости</h1>
           <Sidebar />
         </div>
         <div className="feed-content">
