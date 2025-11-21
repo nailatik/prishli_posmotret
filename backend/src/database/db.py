@@ -14,6 +14,10 @@ from .models.user import User
 from .models.friendship import Friendship
 from .models.user_data import UserData
 from .models.messages import Message
+from .models.likes import Like
+from .models.tags import Tag
+from .models.post_tags import PostTag
+
 
 engine = create_async_engine(
     url=DATABASE_URL, 
@@ -63,6 +67,7 @@ async def decrease_likes_by_post_id(session: AsyncSession, post_id: int):
     await session.commit()
 
 # User and userdata
+
 async def get_all_users(session: AsyncSession):
     stmt = select(User).order_by(Post.user_id)
     result = await session.execute(stmt)
@@ -179,3 +184,7 @@ async def delete_message(session: AsyncSession, message_id: int):
     await session.execute(stmt)
     await session.commit()
     return True
+
+# Tags todo
+
+# Post Tags todo
