@@ -1,8 +1,12 @@
 from datetime import datetime
+from passlib.context import CryptContext
 
 from sqlalchemy import select, update, delete, desc
 from sqlalchemy.ext.asyncio.engine import create_async_engine
 from sqlalchemy.ext.asyncio.session import async_sessionmaker, AsyncSession
+from sqlalchemy.exc import IntegrityError
+
+from fastapi.exceptions import HTTPException
 
 
 from ..config import DATABASE_URL
@@ -13,6 +17,8 @@ from .models.friendship import Friendship
 from .models.user_data import UserData
 from .models.messages import Message
 
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 engine = create_async_engine(
     url=DATABASE_URL, 
@@ -33,6 +39,40 @@ async def get_db():
             raise
         finally:
             await session.close()
+
+# Auth
+
+def get_password_hash(password: str):
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str):
+    return pwd_context.verify(plain_password, hashed_password)
+
+async def authenticate_user(session: AsyncSession, username: str, password: str):
+    user = await get_by_username(session, username)
+    if not user or not verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=404, detail=f"{username} is not found or incorrect password")
+    return user 
+
+async def get_by_username(session: AsyncSession, username: str):
+    stmt = select(User).filter_by(username=username)
+    result = await session.execute(stmt)
+    user = result.scalars().first()
+
+    return user
+
+async def create_user(session: AsyncSession, username: str, password: str):
+    hashed_password = get_password_hash(password)
+    user = User(username=username, hashed_password=hashed_password)
+    try:
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=404, detail=f"User with username {username} already exists")
+
+    return user
 
 # Posts
 
@@ -131,14 +171,6 @@ async def get_user_data_by_id(session: AsyncSession, id):
     user = result.scalar_one_or_none()
 
     return user
-
-async def create_user(session: AsyncSession, hashed_password: str, login: str): 
-    db_user = User(login=login, hashed_password=hashed_password)
-    session.add(db_user)
-    await session.commit()
-    await session.refresh(db_user)
-
-    return db_user
 
 async def update_first_name(session: AsyncSession, user_id: int, first_name: str):
     stmt = update(UserData).where(UserData.user_id == user_id).values(first_name=first_name)

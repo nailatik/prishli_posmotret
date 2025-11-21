@@ -10,4 +10,8 @@ dependencies = [
     "sqlalchemy>=2.0.44",
     "uvicorn>=0.38.0",
     "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.20",
+    "bcrypt==4.0.1",
+    "passlib[bcrypt]>=1.7.4",
+    "pyjwt[crypto]>=2.10.1",
 ]
