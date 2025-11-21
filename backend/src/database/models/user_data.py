@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean
 
 from .base import Base
 
@@ -7,8 +7,7 @@ DEFAULT_AVATAR_URL = "https://avatars.mds.yandex.net/get-yapic/28053/0UUBdbP24Uk
 class UserData(Base):
     __tablename__ = "user_data"
 
-    id = Column(Integer, primary_key=True) 
-    user_id = Column(Integer, ForeignKey("user.user_id"), nullable=False, unique=True)
+    user_id = Column(Integer, nullable=False, primary_key = True)
 
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)

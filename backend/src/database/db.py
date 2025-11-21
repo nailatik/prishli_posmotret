@@ -87,14 +87,52 @@ async def decrease_likes_by_post_id(session: AsyncSession, post_id: int):
 # User and userdata
 
 async def get_all_users(session: AsyncSession):
-    stmt = select(User).order_by(Post.user_id)
+    stmt = select(User).order_by(User.user_id)
     result = await session.execute(stmt)
-    users = result.all()
+    rows = result.scalars().all()
+    users = [
+        {
+            "user_id": row.user_id, 
+            "login": row.login
+        } 
+        for row in rows
+    ]
+
+    return users
+
+async def get_all_users_data(session: AsyncSession):
+    stmt = select(UserData).order_by(UserData.user_id)
+    result = await session.execute(stmt)
+    rows = result.scalars().all()
+    users = [
+        {
+            "user_id": row.user_id,
+            "first_name": row.first_name,
+            "last_name": row.last_name,
+            "birthday": row.birthday,
+            "gender": row.gender,
+            "email": row.email,
+            "phone": row.phone,
+            "avatar_url": row.avatar_url,
+            "bio": row.bio,
+            "city": row.city,
+            "country": row.country,
+            "is_active": row.is_active,
+        } 
+        for row in rows
+    ]
 
     return users
 
 async def get_user_by_id(session: AsyncSession, id):
-    stmt = select(user).where(user.user_id == id)
+    stmt = select(User).where(User.User_id == id)
+    result = await session.execute(stmt)
+    user = result.scalar_one_or_none()
+
+    return user
+
+async def get_user_data_by_id(session: AsyncSession, id):
+    stmt = select(UserData).where(UserData.user_id == id)
     result = await session.execute(stmt)
     user = result.scalar_one_or_none()
 
@@ -128,7 +166,6 @@ async def update_gender(session: AsyncSession, user_id: int, gender: str):
     stmt = update(UserData).where(UserData.user_id == user_id).values(gender=gender)
     await session.execute(stmt)
     await session.commit()
-
 
 async def update_bio(session: AsyncSession, user_id: int, bio: str):
     stmt = update(UserData).where(UserData.user_id == user_id).values(bio=bio)
@@ -167,12 +204,14 @@ async def create_friendship(session: AsyncSession, user_id: int, friend_id: int)
 
     return db_friendship
 
-async def get_user_friends_by_id(session: AsyncSession, id):
+async def get_user_friends_by_id(session: AsyncSession, id): # worth to check if its neccessary to return result as disctionary (egor pls check)
     stmt = select(Friendship).where(Friendship.user_id == id)
     result = await session.execute(stmt)
-    friends = result.all()
+    rows = result.scalars().all()
 
-    return friends
+    friends_ids = [{"friend_id": row.friend_id} for row in rows]
+
+    return friends_ids
 
 # Message
 
@@ -194,7 +233,18 @@ async def get_messages_between_users(session: AsyncSession, user1_id: int, user2
         ((Message.sender_id == user2_id) & (Message.receiver_id == user1_id))
     ).order_by(Message.id)
     result = await session.execute(stmt)
-    messages = result.scalars().all()
+    rows = result.scalars().all()
+
+    messages = [
+        {
+            "sender_id": row.sender_id, 
+            "receiver_id": row.receiver_id, 
+            "content": row.content, 
+            "picture_url": row.picture_url
+        } 
+        for row in rows
+        ]
+    
     return messages
 
 async def delete_message(session: AsyncSession, message_id: int):
