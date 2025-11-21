@@ -1,10 +1,26 @@
-from sqlalchemy import Column, Integer, String
-
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey
 from .base import Base
+from datetime import datetime
 
-class user(Base):
-    __tablename__ = "user"
+DEFAULT_AVATAR_URL = ""
 
-    user_id = Column(Integer, primary_key=True)
-    hashed_password = Column(String, unique=True, nullable=False)
-    login = Column(String, unique=True, nullable=False)
+class UserData(Base):
+    __tablename__ = "user_data"
+
+    id = Column(Integer, primary_key=True) 
+    user_id = Column(Integer, ForeignKey("user.user_id"), nullable=False, unique=True)  # связь с User
+
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    birthday = Column(DateTime, nullable=False)  
+    gender = Column(String, nullable=False, default="Не указан") 
+
+    email = Column(String, unique=True, nullable=False, default="Пусто")
+    phone = Column(String, unique=True, nullable=False, default="Пусто")
+
+    avatar_url = Column(String, nullable=False, default=DEFAULT_AVATAR_URL)
+
+    bio = Column(Text, nullable=False, default="Пусто")  
+    city = Column(String, nullable=False, default="Пусто")
+    country = Column(String, nullable=False, default="Пусто")
+    is_active = Column(Boolean, default=True) 

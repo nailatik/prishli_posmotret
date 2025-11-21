@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
 POSTGRES_USER: str = os.getenv("POSTGRES_USER", "")
 POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
 DB_HOST: str = os.getenv("DB_HOST", "")

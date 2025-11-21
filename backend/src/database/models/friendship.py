@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String
 
 from .base import Base
 
-class friendship(Base):
+class Friendship(Base):
     __tablename__ = "friendship"
 
     user_id = Column(Integer)
