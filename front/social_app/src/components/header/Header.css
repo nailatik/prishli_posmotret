@@ -1,0 +1,39 @@
+.header {
+  background-color: #8E8FFA;
+  padding: 5px;
+  position: fixed;
+  top: 10px;
+  left: 20px;
+  right: 20px;
+  border-radius: 16px;
+  z-index: 100;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+.header-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.header-nav {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.header-nav a {
+  color: white;
+  /*font-size: clamp(16px, 1.5vw, 50px);  /* Адаптивный размер */
+  font-size: 23px;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 15px 25px;                   /* Делает кнопки больше */
+}
+
+.header-nav a:hover {
+  color: #c4c2c2;
+}

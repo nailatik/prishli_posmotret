@@ -14,6 +14,19 @@ services:
     networks:
       - app-network
     
+  client:
+    image: frontend
+    build:
+      context: ./front/social_app
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    networks:
+      - app-network
+
   database:
     image: postgres:17.5-alpine3.22
     container_name: postgres
