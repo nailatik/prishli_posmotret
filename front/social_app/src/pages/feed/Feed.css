@@ -1,11 +1,37 @@
 .feed {
+  background-color: #E8E8E8;
   min-height: 100vh;
-  background-color: #f0f2f5;
-  padding-top: 80px;
+  height: 100vh;         /* важно: занимать полностью экран! */
+  padding-top: 10px;
+  padding: 0;            /* внешний паддинг убираем */
+}
+
+.feed-container {
+  display: flex;
+  height: 100vh;          /* вот ключ для разделения скроллов! */
+  margin: 0 auto;
+  gap: 60px;
+  padding: 0 20px;        /* только горизонтальные паддинги */
+}
+.feed-left {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.feed-title {
+  font-size: 36px;
+  font-weight: bold;
+  padding-top: 20px;
+  color: #000;
+  margin-bottom: 30px;
 }
 
 .feed-content {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
+  flex: 1;
+  /*padding: 20px;*/
+  overflow-y: auto;              /* скролл только для ленты! */
+  padding: 32px 24px 32px 24px;
+  margin-top: 93px;
+  min-width: 0;                  /* чтобы не распирало */
+  background: #f8f8f8;
 }

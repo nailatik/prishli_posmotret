@@ -6,8 +6,8 @@ function Header() {
       <div className="header-container">        
         {/* Навигация */}
         <nav className="header-nav">
-          <a href="/">Моя страница</a>
-          <a href="/profile">Новости</a>
+          <a href="/">Новости</a>
+          <a href="/profile">Моя страница</a>
           <a href="/messages">Сообщения</a>
           <a href="/friends">Мои друзья</a>
           <a href="/music">Музыка</a>
