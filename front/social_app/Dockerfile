@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22.17.1-alpine3.22 AS builder
+FROM node:25-alpine3.22 AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:22.17.1-alpine3.22
+FROM node:25-alpine3.22
 
 WORKDIR /app
 
