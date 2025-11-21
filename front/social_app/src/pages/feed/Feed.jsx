@@ -23,7 +23,7 @@ function Feed() {
       description: 'Щенок впервые гуляет на даче. Очень любопытный и фотогеничный.'
     },
     {
-      id: 1,
+      id: 3,
       imgSrc: 'https://img.freepik.com/free-photo/cute-beagle-dark-brown-bow-tie_53876-89059.jpg?semt=ais_hybrid&w=740&q=80',
       author: 'Игорь Дорохов',
       avatarSrc: 'https://randomuser.me/api/portraits/men/34.jpg',
@@ -31,7 +31,7 @@ function Feed() {
       description: 'Щенок впервые гуляет на даче. Очень любопытный и фотогеничный.'
     },
     {
-      id: 1,
+      id: 4,
       imgSrc: 'https://img.freepik.com/free-photo/cute-beagle-dark-brown-bow-tie_53876-89059.jpg?semt=ais_hybrid&w=740&q=80',
       author: 'Игорь Дорохов',
       avatarSrc: 'https://randomuser.me/api/portraits/men/34.jpg',
@@ -39,7 +39,7 @@ function Feed() {
       description: 'Щенок впервые гуляет на даче. Очень любопытный и фотогеничный.'
     },
     {
-      id: 1,
+      id: 5,
       imgSrc: 'https://img.freepik.com/free-photo/cute-beagle-dark-brown-bow-tie_53876-89059.jpg?semt=ais_hybrid&w=740&q=80',
       author: 'Игорь Дорохов',
       avatarSrc: 'https://randomuser.me/api/portraits/men/34.jpg',
