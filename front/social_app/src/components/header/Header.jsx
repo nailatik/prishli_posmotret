@@ -32,6 +32,7 @@ function Header() {
           <Link to="/">Новости</Link>
           <Link to="/messages">Сообщения</Link>
           <Link to="/friends">Мои друзья</Link>
+          <Link to="/communities">Сообщества</Link>
           <Link to="/music">Музыка</Link>
         </nav>
       </div>
