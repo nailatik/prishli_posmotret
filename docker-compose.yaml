@@ -1,0 +1,34 @@
+services:
+  server:
+    image: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    env_file:
+      - ./backend/src/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+    networks:
+      - app-network
+    
+  database:
+    image: postgres:17.5-alpine3.22
+    container_name: postgres
+    env_file:
+      - ./backend/src/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

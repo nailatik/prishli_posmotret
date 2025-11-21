@@ -15,7 +15,7 @@ from .models.friendship import Friendship
 from .models.user_data import UserData
 from .models.messages import Message
 from .models.likes import Like
-from .models.tags import Tag
+#from .models.tags import Tag
 from .models.post_tags import PostTag
 
 
@@ -42,9 +42,27 @@ async def get_db():
 # Posts
 
 async def get_all_posts(session: AsyncSession):
-    stmt = select(Post.content, Post.picture).order_by(Post.post_id)
+    stmt = select(
+        Post.post_id,
+        Post.user_id,
+        Post.content,
+        Post.picture,
+        Post.likes_count,
+    ).order_by(Post.post_id)
+
     result = await session.execute(stmt)
-    posts = result.all()
+    rows = result.fetchall()
+
+    posts = [
+        {
+            "post_id": row.post_id,
+            "user_id": row.user_id,
+            "content": row.content,
+            "picture": row.picture,
+            "likes_count": row.likes_count,
+        }
+        for row in rows
+    ]
 
     return posts
 

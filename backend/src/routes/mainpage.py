@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from ..database.db import (
     get_db,
-    get_all_posts
+    get_all_posts,
+    create_post as create_post_db,
 )
 
 
@@ -19,10 +20,25 @@ async def get_posts(
 ):
     try:
         posts = await get_all_posts(session)
-        posts_response = [post.to_pydantic() for post in posts]
+        #posts_response = [post.to_pydantic() for post in posts]
 
-        return posts_response
+        return posts
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post('/create-post')
+async def create_post(
+    session: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        post = await create_post_db(session=session, user_id=1, content="Hell", picture="Hell nah")
+        return {
+            "post_id": post.post_id,
+            "user_id": post.user_id,
+            "content": post.content,
+            "picture": post.picture,
+            "likes_count": post.likes_count,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
