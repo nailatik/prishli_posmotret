@@ -1,0 +1,84 @@
+/* src/pages/notfound/NotFound.css */
+.notfound-bg {
+  min-height: 100vh;
+  background: linear-gradient(120deg, #8E8FFA 0%, #f8fafc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.notfound-card {
+  background: #fff;
+  border-radius: 27px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  padding: 56px 40px 48px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-width: 320px;
+  z-index: 2;
+}
+
+.notfound-title {
+  font-size: 90px;
+  font-family: 'MainFont', 'Arial', sans-serif;
+  letter-spacing: 12px;
+  color: #8E8FFA;
+  margin: 0 0 18px 0;
+  animation: fade404 1s ease;
+}
+
+@keyframes fade404 {
+  0% { opacity: 0; transform: translateY(-20px); }
+  80% { opacity: 1; transform: translateY(0);}
+  100% { opacity: 1; }
+}
+
+.notfound-desc {
+  color: #333;
+  font-size: 22px;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.notfound-link {
+  display: inline-block;
+  background: #8E8FFA;
+  color: #fff;
+  padding: 12px 34px;
+  border-radius: 22px;
+  font-size: 18px;
+  text-decoration: none;
+  transition: background 0.2s;
+  margin-bottom: 10px;
+}
+
+.notfound-link:hover {
+  background: #6366f1;
+}
+
+/* Декор — анимированные звезды */
+.notfound-decor .star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: notfound-star-blink 1.8s infinite;
+}
+.star-lg {
+  width: 19px; height: 19px; left: 36px; top: 26px; animation-delay: .2s;
+}
+.star-md {
+  width: 13px; height: 13px; right: 40px; top: 48px; animation-delay: .7s;
+}
+.star-sm {
+  width: 8px; height: 8px; right: 30px; bottom: 16px; animation-delay: 1.2s;
+}
+
+@keyframes notfound-star-blink {
+  0% { opacity: 0.7; transform: scale(1);}
+  50% { opacity: 1; transform: scale(1.4);}
+  100% { opacity: 0.7; transform: scale(1);}
+}
