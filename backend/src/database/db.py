@@ -1,10 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, desc
 from sqlalchemy.ext.asyncio.engine import create_async_engine
 from sqlalchemy.ext.asyncio.session import async_sessionmaker, AsyncSession
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import not_, null
 
 
 from ..config import DATABASE_URL
@@ -14,9 +12,6 @@ from .models.user import User
 from .models.friendship import Friendship
 from .models.user_data import UserData
 from .models.messages import Message
-from .models.likes import Like
-#from .models.tags import Tag
-from .models.post_tags import PostTag
 
 
 engine = create_async_engine(
@@ -33,7 +28,7 @@ async def get_db():
     async with SessionLocal() as session:
         try:
             yield session
-        except Exception as e:
+        except Exception:
             await session.rollback()
             raise
         finally:
@@ -48,7 +43,7 @@ async def get_all_posts(session: AsyncSession):
         Post.content,
         Post.picture,
         Post.likes_count,
-    ).order_by(Post.post_id)
+    ).order_by(desc(Post.post_id))
 
     result = await session.execute(stmt)
     rows = result.fetchall()
@@ -80,7 +75,7 @@ async def increase_likes_by_post_id(session: AsyncSession, post_id: int):
     await session.commit()
 
 async def decrease_likes_by_post_id(session: AsyncSession, post_id: int):
-    stmt = update(Post).where(Post.post_id == post_id).values(likes_count=Post.likes_count + 1)
+    stmt = update(Post).where(Post.post_id == post_id).values(likes_count=Post.likes_count - 1)
     await session.execute(stmt)
     await session.commit()
 

@@ -20,7 +20,6 @@ async def get_posts(
 ):
     try:
         posts = await get_all_posts(session)
-        #posts_response = [post.to_pydantic() for post in posts]
 
         return posts
     except Exception as e:
