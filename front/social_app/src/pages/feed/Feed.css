@@ -1,0 +1,11 @@
+.feed {
+  min-height: 100vh;
+  background-color: #f0f2f5;
+  padding-top: 80px;
+}
+
+.feed-content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
