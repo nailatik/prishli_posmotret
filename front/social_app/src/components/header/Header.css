@@ -1,8 +1,8 @@
 .header {
   background-color: #8E8FFA;
-  padding: 15px;                        /* Просто увеличил padding */
+  padding: 5px;
   position: fixed;
-  bottom: 20px;
+  top: 10px;
   left: 20px;
   right: 20px;
   border-radius: 16px;
