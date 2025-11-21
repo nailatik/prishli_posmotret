@@ -5,7 +5,7 @@ class LikeRecommendationService:
     def __init__(self, session):
         self.session = session
 
-    async def recommend_by_likes(self, user_id, top_n=10):
+    async def recommend_by_likes(self, user_id, top_n=15):
         # 1. Берём все посты, которые лайкнул пользователь
         result = await self.session.execute(
             text("SELECT post_id FROM likes WHERE user_id = :uid"),

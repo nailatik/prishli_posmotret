@@ -8,7 +8,7 @@ class CombinedUserRecommendationService:
     def __init__(self, session):
         self.session = session
 
-    async def recommend_users(self, user_id, top_n=10):
+    async def recommend_users(self, user_id, top_n=15):
         """
         Комбинированные рекомендации пользователей:
         - друзья

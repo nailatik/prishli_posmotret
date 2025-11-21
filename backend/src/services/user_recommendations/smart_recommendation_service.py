@@ -15,16 +15,17 @@ class SmartRecommendationService:
         self.tag_service = TagUserRecommendationService(session)
         self.combined_service = CombinedUserRecommendationService(session)
 
-    async def get_top4(self, user_id: int):
+    async def get_top(self, user_id: int, top_n: int = 15):
         friends = [uid for uid, _ in await self.friend_service.recommend(user_id)]
         likes = [uid for uid, _ in await self.like_service.recommend_by_likes(user_id)]
         tags = [uid for uid, _ in await self.tag_service.recommend_by_tags(user_id)]
         combined_with_scores = await self.combined_service.recommend_users(user_id)
         combined = [uid for uid, _ in combined_with_scores]
 
-        return SmartUserSelector.pick_top4(
+        return SmartUserSelector.pick_top(
             friends=friends,
             likes=likes,
             tags=tags,
-            combined=combined
+            combined=combined,
+            top_n=top_n
         )

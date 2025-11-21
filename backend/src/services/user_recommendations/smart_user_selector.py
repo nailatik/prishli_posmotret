@@ -6,34 +6,43 @@ class SmartUserSelector:
     """
 
     @staticmethod
-    def pick_top4(friends, likes, tags, combined):
+    def pick_top(friends, likes, tags, combined, top_n=15):
+        """
+        friends, likes, tags, combined — списки ID пользователей
+        top_n — сколько пользователей вернуть
+        """
         result = []
 
-        # 1) Берём 2 по друзьям
+        # 1) Берём примерно половину из друзей
+        num_friends = min(top_n // 2, len(friends))
         for uid in friends:
             if uid not in result:
                 result.append(uid)
-            if len(result) == 2:
+            if len(result) == num_friends:
                 break
 
-        # 2) Берём 1 по лайкам
+        # 2) Берём примерно четверть из лайков
+        num_likes = min(top_n // 4, len(likes))
         for uid in likes:
             if uid not in result:
                 result.append(uid)
+            if len(result) == num_friends + num_likes:
                 break
 
-        # 3) Берём 1 по тегам
+        # 3) Берём примерно четверть из тегов
+        num_tags = min(top_n - len(result), len(tags))
         for uid in tags:
             if uid not in result:
                 result.append(uid)
+            if len(result) == top_n:
                 break
 
-        # 4) Если всё равно меньше 4 → добить из комбинированного списка
-        if len(result) < 4:
+        # 4) Если всё равно меньше top_n → добить из комбинированного списка
+        if len(result) < top_n:
             for uid in combined:
                 if uid not in result:
                     result.append(uid)
-                if len(result) == 4:
+                if len(result) == top_n:
                     break
 
         return result

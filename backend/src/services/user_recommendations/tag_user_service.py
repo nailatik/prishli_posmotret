@@ -5,7 +5,7 @@ class TagUserRecommendationService:
     def __init__(self, session):
         self.session = session
 
-    async def recommend_by_tags(self, user_id, top_n=10):
+    async def recommend_by_tags(self, user_id, top_n=15):
         # Берём теги постов, которые лайкнул пользователь
         result = await self.session.execute(
             text("""

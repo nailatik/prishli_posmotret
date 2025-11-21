@@ -13,4 +13,4 @@ class RecommendationService:
             if u not in friends and u != user_id
         )
 
-        return scores.most_common(10)
+        return scores.most_common(15)
