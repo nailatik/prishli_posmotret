@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'  // исправлено на react-router-dom
 import { useApi } from '../../hooks/useApi'
 import Header from '../../components/header/Header'
 import './Communities.css'
@@ -19,7 +20,6 @@ function Communities() {
     const fetchCommunities = async () => {
       try {
         setLoading(true)
-        // Используем эндпоинт /user/me/communities, который автоматически получает user_id из токена
         const data = await makeRequest('user/me/communities')
         setAllCommunities(data)
       } catch (err) {
@@ -51,10 +51,6 @@ function Communities() {
   useEffect(() => {
     setDisplayCount(PAGE_SIZE)
   }, [query])
-
-  const handleCardClick = (community) => {
-    alert(`Открыть: ${community.name}`)
-  }
 
   if (loading) {
     return (
@@ -94,10 +90,11 @@ function Communities() {
         </div>
         <div className="communities-list">
           {communitiesToDisplay.map(c => (
-            <div
+            <Link
+              to={`/community/${c.id}`}
               className="community-card"
               key={c.id}
-              onClick={() => handleCardClick(c)}
+              style={{ textDecoration: 'none', color: 'inherit' }}
             >
               <img className="community-avatar" src={c.avatar} alt={c.name} />
               <div className="community-name">{c.name}</div>
@@ -106,7 +103,7 @@ function Communities() {
                   ? `${c.description.slice(0, 20)}...`
                   : c.description}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
         {displayCount < filtered.length && (
