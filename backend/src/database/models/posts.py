@@ -7,6 +7,7 @@ class Post(Base):
 
     post_id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
+    community_id = Column(Integer, nullable=True)
     title = Column(String, nullable=False)
     content = Column(String, nullable=False)
     picture = Column(String, nullable=True, default=None)

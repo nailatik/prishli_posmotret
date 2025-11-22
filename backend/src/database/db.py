@@ -16,6 +16,7 @@ from .models.user import User
 from .models.friendship import Friendship
 from .models.user_data import UserData
 from .models.messages import Message
+from .models.community import Community
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -80,6 +81,7 @@ async def get_all_posts(session: AsyncSession):
     stmt = select(
         Post.post_id,
         Post.user_id,
+        Post.community_id,
         Post.title,
         Post.content,
         Post.picture,
@@ -91,13 +93,26 @@ async def get_all_posts(session: AsyncSession):
 
     posts = []
     for row in rows:
-        user = await get_user_by_id(session, row.user_id)
+        user = None
+        community = None
+
+        if row.user_id != 0:
+            user = await get_user_by_id(session, row.user_id)
+
+        if row.community_id != 0:
+            community = await get_community_by_id(session, row.community_id)
+
         posts.append({
             "post_id": row.post_id,
+
             "author": {
                 "user_id": user.user_id if user else None,
-                "username": user.username if user else "Unknown"
+                "community_id": community.com_id if community else None,
+                "username": user.username if user else (
+                    community.name if community else "Unknown"
+                )
             },
+
             "title": row.title,
             "description": row.content,
             "picture": row.picture,
@@ -113,8 +128,14 @@ async def get_user_by_id(session: AsyncSession, id):
 
     return user
 
-async def create_post(session: AsyncSession, user_id: int, title: str, content: str, picture: str = None): 
-    db_post = Post(user_id=user_id, title=title, content=content, picture=picture)
+async def create_post(session: AsyncSession, user_id: int | None, community_id: int | None, content: str, picture: str): 
+    db_post = Post(
+        user_id=user_id,
+        community_id=community_id,
+        content=content,
+        picture=picture
+    )
+
     session.add(db_post)
     await session.commit()
     await session.refresh(db_post)
@@ -287,6 +308,67 @@ async def delete_message(session: AsyncSession, message_id: int):
     await session.commit()
     return True
 
-# Tags todo
+async def get_posts_by_community_id(session: AsyncSession, community_id: int):
+    stmt = (select(Post.post_id, Post.user_id, Post.content, Post.picture, Post.likes_count, Post.community_id).where(Post.community_id == community_id).order_by(Post.post_id)
+    )
+    result = await session.execute(stmt)
+    rows = result.fetchall()
+    posts = [
+        {
+            "post_id": row.post_id,
+            "user_id": row.user_id,
+            "content": row.content,
+            "picture": row.picture,
+            "likes_count": row.likes_count,
+            "community_id": row.community_id,
+            "title": row.title
+        }
+        for row in rows
+    ]
 
-# Post Tags todo
+    return posts
+
+async def get_all_communities(session: AsyncSession):
+    stmt = select(Community).order_by(Community.com_id)
+    result = await session.execute(stmt)
+    rows = result.scalars().all()
+    coms = [
+        {
+            "com_id": row.com_id, 
+            "name": row.name,
+            "description": row.description,
+            "creator_id": row.creator_id,
+            "avatar_url": row.avatar_url,
+            "created_at": row.created_at
+        } 
+        for row in rows
+    ]
+
+    return coms
+
+async def get_posts_by_user_id(session: AsyncSession, user_id: int):
+    stmt = (select(Post.post_id, Post.user_id, Post.content, Post.picture, Post.likes_count, Post.community_id).where(Post.user_id == user_id).order_by(Post.post_id)
+    )
+    result = await session.execute(stmt)
+    rows = result.fetchall()
+    posts = [
+        {
+            "post_id": row.post_id,
+            "user_id": row.user_id,
+            "content": row.content,
+            "picture": row.picture,
+            "likes_count": row.likes_count,
+            "community_id": row.community_id,
+            "title": row.title
+        }
+        for row in rows
+    ]
+
+    return posts
+
+async def get_community_by_id(session: AsyncSession, com_id: int):
+    stmt = select(Community).where(Community.com_id == com_id)
+    result = await session.execute(stmt)
+    community = result.scalar_one_or_none()
+
+    return community
