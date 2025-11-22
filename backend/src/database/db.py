@@ -17,6 +17,8 @@ from .models.friendship import Friendship
 from .models.user_data import UserData
 from .models.messages import Message
 from .models.comments import Comment
+from .models.communities import Community
+from .models.user_community import UserCommunity
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -323,6 +325,62 @@ async def get_comments_by_post_id(session: AsyncSession, post_id: int):
         })
     
     return comments
+
+# Communities
+
+async def create_community(session: AsyncSession, name: str, description: str = None, avatar: str = None):
+    db_community = Community(name=name, description=description, avatar=avatar)
+    session.add(db_community)
+    await session.flush()
+    community_id = db_community.community_id
+    await session.commit()
+    return {
+        "community_id": community_id,
+        "name": name,
+        "description": description,
+        "avatar": avatar
+    }
+
+async def subscribe_user_to_community(session: AsyncSession, user_id: int, community_id: int):
+    # Проверяем, не подписан ли уже пользователь
+    stmt = select(UserCommunity).where(
+        UserCommunity.user_id == user_id,
+        UserCommunity.community_id == community_id
+    )
+    result = await session.execute(stmt)
+    existing = result.scalar_one_or_none()
+    
+    if existing:
+        return None  # Уже подписан
+    
+    db_subscription = UserCommunity(user_id=user_id, community_id=community_id)
+    session.add(db_subscription)
+    await session.commit()
+    await session.refresh(db_subscription)
+    return db_subscription
+
+async def get_user_communities(session: AsyncSession, user_id: int):
+    # Получаем все подписки пользователя на сообщества
+    stmt = select(UserCommunity).where(UserCommunity.user_id == user_id)
+    result = await session.execute(stmt)
+    subscriptions = result.scalars().all()
+    
+    communities = []
+    for sub in subscriptions:
+        # Получаем информацию о сообществе
+        community_stmt = select(Community).where(Community.community_id == sub.community_id)
+        community_result = await session.execute(community_stmt)
+        community = community_result.scalar_one_or_none()
+        
+        if community:
+            communities.append({
+                "id": community.community_id,
+                "name": community.name,
+                "description": community.description or "",
+                "avatar": community.avatar or "https://api.dicebear.com/7.x/fun/svg?seed=community"
+            })
+    
+    return communities
 
 # Tags todo
 

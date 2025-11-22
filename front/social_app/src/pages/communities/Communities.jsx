@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useApi } from '../../hooks/useApi'
 import Header from '../../components/header/Header'
 import './Communities.css'
 
 const PAGE_SIZE = 20
 
 function Communities() {
+  const { makeRequest } = useApi()
   const [query, setQuery] = useState('')
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE)
   const [allCommunities, setAllCommunities] = useState([])
@@ -17,15 +19,11 @@ function Communities() {
     const fetchCommunities = async () => {
       try {
         setLoading(true)
-        const currentUserId = 1 // TODO: получить из контекста/авторизации
-        const response = await fetch(`http://localhost:8000/api/user/${currentUserId}/communities`)
-        if (!response.ok) {
-          throw new Error('Ошибка загрузки сообществ')
-        }
-        const data = await response.json()
+        // Используем эндпоинт /user/me/communities, который автоматически получает user_id из токена
+        const data = await makeRequest('user/me/communities')
         setAllCommunities(data)
       } catch (err) {
-        setError(err.message)
+        setError(err.message || 'Ошибка загрузки сообществ')
       } finally {
         setLoading(false)
       }
