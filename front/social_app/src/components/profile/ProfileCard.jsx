@@ -60,6 +60,7 @@ import {
   Grid,
   Paper
 } from '@mui/material'
+import { DEFAULT_AVATAR_URL } from '../../config/api'
 import './ProfileCard.css'
 
 function ProfileCard({ profile, isOwnProfile = false, isFriend = false, onAddFriend, onRemoveFriend }) {
@@ -79,9 +80,13 @@ function ProfileCard({ profile, isOwnProfile = false, isFriend = false, onAddFri
   const ownProfile = isOwnProfile || is_own_profile || false
   
   // Для своего профиля показываем только username (ник), для других - имя и фамилию
+  // Если username есть, используем его (для своего профиля)
+  // Иначе используем имя и фамилию (для чужих профилей)
   const displayName = ownProfile && username 
     ? username 
-    : `${first_name || ''} ${last_name || ''}`.trim() || 'Без имени'
+    : (first_name || last_name 
+        ? `${first_name || ''} ${last_name || ''}`.trim() 
+        : username || 'Без имени')
   
   // Для своего профиля не показываем bio (описание), только username
   const showBio = !ownProfile
@@ -92,7 +97,7 @@ function ProfileCard({ profile, isOwnProfile = false, isFriend = false, onAddFri
         {/* Левая часть — фото */}
         <Grid item>
           <Avatar
-            src={avatar || 'https://via.placeholder.com/150'}
+            src={avatar || DEFAULT_AVATAR_URL}
             alt={displayName}
             className="profile-main-avatar"
           />

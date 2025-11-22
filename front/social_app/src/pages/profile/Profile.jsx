@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import Header from '../../components/header/Header'
 import ProfileCard from '../../components/profile/ProfileCard'
+import { useApi } from '../../hooks/useApi'
 import './profile.css'
 
 export default function Profile({ userId, isOwnProfile = true }) {
+  const { makeRequest } = useApi()
   const [profileData, setProfileData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -21,14 +23,11 @@ export default function Profile({ userId, isOwnProfile = true }) {
   const fetchProfile = async (userId) => {
     try {
       setLoading(true)
-      const response = await fetch(`http://localhost:8000/api/profile/${userId}`)
-      if (!response.ok) {
-        throw new Error('Ошибка загрузки профиля')
-      }
-      const data = await response.json()
+      // Используем useApi, чтобы токен автоматически передавался
+      const data = await makeRequest(`profile/${userId}`)
       setProfileData(data)
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Ошибка загрузки профиля')
     } finally {
       setLoading(false)
     }

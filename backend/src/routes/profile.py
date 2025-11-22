@@ -31,21 +31,29 @@ async def get_profile(
         is_own_profile = False
         username = None
         is_friend = False
+        
+        # Получаем username из таблицы User для любого профиля (для отображения)
+        db_user_by_id = await get_user_by_id(session, user_id)
+        profile_username = db_user_by_id.username if db_user_by_id else None
+        
         if user:
             db_user = await get_by_username(session, user["username"])
             if db_user:
                 if db_user.user_id == user_id:
                     is_own_profile = True
-                    username = db_user.username
+                    username = db_user.username  # Для своего профиля используем username текущего пользователя
                 else:
                     # Проверяем, являются ли друзьями
                     is_friend = await is_friends(session, db_user.user_id, user_id)
 
+        # Импортируем дефолтный аватар
+        from ..database.models.user_data import DEFAULT_AVATAR_URL
+        
         # Формируем ответ
         profile = {
             "first_name": user_data.first_name if user_data else "",
             "last_name": user_data.last_name if user_data else "",
-            "avatar": user_data.avatar_url if user_data else "",
+            "avatar": user_data.avatar_url if user_data and user_data.avatar_url else DEFAULT_AVATAR_URL,
             "bio": user_data.bio if user_data else "",
             "is_own_profile": is_own_profile,
             "username": username if is_own_profile else None,  # username только для своего профиля

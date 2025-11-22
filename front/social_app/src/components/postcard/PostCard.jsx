@@ -9,6 +9,7 @@ import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import CardMedia from '@mui/material/CardMedia'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
+import { DEFAULT_AVATAR_URL } from '../../config/api'
 
 function PostCard({ 
   imgSrc, 
@@ -85,7 +86,7 @@ function PostCard({
         <Box sx={{ width: '100%' }}>
           <Grid container alignItems="center" spacing={2}>
             <Grid item>
-              <Avatar src={avatarSrc} sx={{ width: 48, height: 48 }} />
+              <Avatar src={avatarSrc || DEFAULT_AVATAR_URL} sx={{ width: 48, height: 48 }} />
             </Grid>
             <Grid item>
               <Typography variant="subtitle1" fontWeight="bold">
