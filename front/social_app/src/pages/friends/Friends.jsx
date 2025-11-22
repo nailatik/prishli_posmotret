@@ -27,7 +27,7 @@ function Communities() {
     const fetchFriends = async () => {
       try {
         setLoading(true)
-        const currentUserId = 1 // TODO: получить из контекста/авторизации
+        const currentUserId = localStorage.getItem('user_id') || '1'
         const response = await fetch(`http://localhost:8000/api/friends/${currentUserId}`)
         if (!response.ok) {
           throw new Error('Ошибка загрузки друзей')
@@ -87,8 +87,9 @@ function Communities() {
   }, [query])
 
   const handleCardClick = (c) => {
-  alert(`Открыть: ${c.username || `${c.first_name} ${c.last_name}`}`)
-}
+    navigate(`/profile/${c.user_id}`)
+  };
+
 
 
   if (loading) {

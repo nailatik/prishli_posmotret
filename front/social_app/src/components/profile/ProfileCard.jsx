@@ -29,11 +29,12 @@ function ProfileCard({ profile, isOwnProfile = false, isFriend = false, onAddFri
   // Для своего профиля показываем только username (ник), для других - имя и фамилию
   // Если username есть, используем его (для своего профиля)
   // Иначе используем имя и фамилию (для чужих профилей)
-  const displayName = ownProfile && username 
-    ? username 
+  const displayName = ownProfile
+    ? (first_name || username || 'Без имени') + (last_name ? ` ${last_name}` : '')
     : (first_name || last_name 
         ? `${first_name || ''} ${last_name || ''}`.trim() 
         : username || 'Без имени')
+
 
   return (
     <div className="profile-page-bg">

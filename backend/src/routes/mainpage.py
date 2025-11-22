@@ -58,6 +58,7 @@ async def sign_up(
     return {
         "id": user.user_id,
         "username": user.username,
+        "first_name": user.username
     }
 
 @router.post("/seed-users")

@@ -46,9 +46,13 @@ async def get_profile(
                 else:
                     # Проверяем, являются ли друзьями
                     is_friend = await is_friends(session, db_user.user_id, user_id)
+        # ДЛЯ НЕАВТОРИЗОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ ИСПОЛЬЗУЕМ username из профиля
+        if not user and db_user_by_id:
+            username = db_user_by_id.username  # ← ДОБАВЬТЕ ЭТУ СТРОКУ!
 
         # Импортируем дефолтный аватар
         from ..database.models.user_data import DEFAULT_AVATAR_URL
+        
         # ДОБАВЛЯЕМ РЕКОМЕНДОВАННЫХ ДРУЗЕЙ
         recommendations = []
         if user and not is_own_profile:
@@ -89,7 +93,7 @@ async def get_profile(
             "avatar": user_data.avatar_url if user_data and user_data.avatar_url else DEFAULT_AVATAR_URL,
             "bio": user_data.bio if user_data else "",
             "is_own_profile": is_own_profile,
-            "username": username if is_own_profile else None,
+            "username": username if is_own_profile else profile_username,
             "is_friend": is_friend,
             "posts": [],
             "recommendations": recommendations
