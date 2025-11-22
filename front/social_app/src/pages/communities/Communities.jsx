@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'  // исправлено на react-router-dom
+import { Link } from 'react-router'
 import { useApi } from '../../hooks/useApi'
 import Header from '../../components/header/Header'
 import './Communities.css'
