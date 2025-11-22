@@ -61,6 +61,16 @@ export default function CommunityPage() {
     }
   }
 
+  const handlePostCreated = async () => {
+    // Обновляем данные сообщества после создания поста
+    try {
+      const data = await makeRequest(`communities/${communityId}`)
+      setCommunityData(data)
+    } catch (err) {
+      console.error('Ошибка обновления постов:', err)
+    }
+  }
+
   if (loading) return <div>Загрузка...</div>
   if (error) return <div>Ошибка: {error}</div>
 
@@ -73,6 +83,7 @@ export default function CommunityPage() {
           isSubscribed={isSubscribed}
           onSubscribe={handleSubscribe}
           onUnsubscribe={handleUnsubscribe}
+          onPostCreated={handlePostCreated}
         />
       </div>
     </div>

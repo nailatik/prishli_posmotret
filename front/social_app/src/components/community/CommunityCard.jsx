@@ -1,5 +1,6 @@
-import React from 'react'
-import PostCardCom from './PostCardCom'  // путь к вашему компоненту
+import React, { useState } from 'react'
+import PostCardCom from '../postcardCom/PostCardCom'
+import CreatePostModal from '../sidebar/CreatePostModal'
 import {
   Avatar,
   Typography,
@@ -7,8 +8,11 @@ import {
   Box,
   Grid
 } from '@mui/material'
+import { DEFAULT_AVATAR_URL } from '../../config/api'
 
-function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) {
+function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe, onPostCreated }) {
+  const [modalOpen, setModalOpen] = useState(false)
+  
   if (!community) return null
 
   const {
@@ -18,11 +22,17 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
     description,
     avatar,
     members_count,
-    cover_image,
-    comments,
+    posts = [],
   } = community
 
   const communityId = id || community_id
+
+  const handlePostCreated = async () => {
+    if (onPostCreated) {
+      await onPostCreated()
+    }
+    setModalOpen(false)
+  }
 
   return (
     <div className="community-page-bg">
@@ -30,7 +40,7 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
         {/* Левая часть — аватар сообщества */}
         <Grid item>
           <Avatar
-            src={avatar || 'https://via.placeholder.com/150'}
+            src={avatar || DEFAULT_AVATAR_URL}
             alt={name}
             className="community-main-avatar"
             sx={{ width: 80, height: 80 }}
@@ -54,16 +64,25 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
               </Typography>
             </Box>
 
-            {/* Кнопки подписки */}
-            <Box sx={{ mt: 2 }}>
+            {/* Кнопки подписки и создания поста */}
+            <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
               {isSubscribed ? (
-                <Button 
-                  variant="outlined" 
-                  color="secondary" 
-                  onClick={() => onUnsubscribe(communityId)}
-                >
-                  Отписаться
-                </Button>
+                <>
+                  <Button 
+                    variant="outlined" 
+                    color="secondary" 
+                    onClick={() => onUnsubscribe(communityId)}
+                  >
+                    Отписаться
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    color="primary" 
+                    onClick={() => setModalOpen(true)}
+                  >
+                    Создать пост
+                  </Button>
+                </>
               ) : (
                 <Button 
                   variant="contained" 
@@ -76,18 +95,37 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
             </Box>
           </Box>
 
-          {/* Карточка сообщества с изображением, комментариями и действиями */}
-          <PostCardCom
-            imgSrc={cover_image || ''}
-            communityName={name || ''}
-            avatarSrc={avatar || ''}
-            description={description || ''}
-            comments={comments || []}
-            onLike={() => console.log('Лайк сообщества')}
-            onSendComment={comment => console.log('Отправить комментарий:', comment)}
-          />
+          {/* Посты сообщества */}
+          {posts && posts.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Посты сообщества</Typography>
+              {posts.map((post) => (
+                <PostCardCom
+                  key={post.post_id}
+                  imgSrc={post.picture || ''}
+                  communityName={name || ''}
+                  avatarSrc={avatar || DEFAULT_AVATAR_URL}
+                  title={post.title}
+                  description={post.description || ''}
+                  comments={post.comments || []}
+                  onLike={() => console.log('Лайк поста:', post.post_id)}
+                  onSendComment={comment => console.log('Отправить комментарий:', comment)}
+                  sx={{ mb: 2 }}
+                />
+              ))}
+            </Box>
+          )}
         </Grid>
       </Grid>
+      
+      {/* Модальное окно для создания поста */}
+      {modalOpen && (
+        <CreatePostModal
+          communityId={communityId}
+          onClose={() => setModalOpen(false)}
+          onPostCreated={handlePostCreated}
+        />
+      )}
     </div>
   )
 }

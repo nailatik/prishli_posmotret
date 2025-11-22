@@ -8,11 +8,13 @@ import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import CardMedia from '@mui/material/CardMedia'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
+import { DEFAULT_AVATAR_URL } from '../../config/api'
 
 function PostCardCom({ 
   imgSrc, 
   communityName, 
   avatarSrc, 
+  title,
   description, 
   comments = [],
   onLike, 
@@ -85,7 +87,7 @@ function PostCardCom({
         <Box sx={{ width: '100%' }}>
           <Grid container alignItems="center" spacing={2}>
             <Grid item>
-              <Avatar src={avatarSrc} sx={{ width: 48, height: 48 }} />
+              <Avatar src={avatarSrc || DEFAULT_AVATAR_URL} sx={{ width: 48, height: 48 }} />
             </Grid>
             <Grid item>
               <Typography variant="subtitle1" fontWeight="bold">
@@ -94,10 +96,11 @@ function PostCardCom({
             </Grid>
           </Grid>
 
-          <Typography variant="h5" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
-            {/* Здесь можно добавить имя сообщества или заголовок */}
-            {communityName}
-          </Typography>
+          {title && (
+            <Typography variant="h5" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
+              {title}
+            </Typography>
+          )}
 
           {description && (
             <Typography variant="body1" sx={{ mb: 2 }}>

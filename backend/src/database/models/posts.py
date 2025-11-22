@@ -6,7 +6,8 @@ class Post(Base):
     __tablename__ = "posts"
 
     post_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer)
+    user_id = Column(Integer, nullable=True)  # Может быть null, если пост от сообщества
+    community_id = Column(Integer, nullable=True)  # Может быть null, если пост от пользователя
     title = Column(String, nullable=False)
     content = Column(String, nullable=False)
     picture = Column(String, nullable=True, default=None)

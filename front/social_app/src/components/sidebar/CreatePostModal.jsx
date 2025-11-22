@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useApi } from '../../hooks/useApi'
 import './CreatePostModal.css'
 
-function CreatePostModal({ onClose, onPostCreated }) {
+function CreatePostModal({ onClose, onPostCreated, communityId = null }) {
   const { makeRequest } = useApi()
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
@@ -23,7 +23,8 @@ function CreatePostModal({ onClose, onPostCreated }) {
         body: JSON.stringify({
           title: title.trim(),
           content: desc.trim() || '',
-          picture: picture.trim() || null
+          picture: picture.trim() || null,
+          community_id: communityId || null
         })
       })
       
@@ -45,7 +46,7 @@ function CreatePostModal({ onClose, onPostCreated }) {
   return (
     <div className="modal-overlay">
       <div className="modal-window">
-        <h2>Создать пост</h2>
+        <h2>{communityId ? 'Создать пост в сообществе' : 'Создать пост'}</h2>
         <form onSubmit={handleSubmit}>
           <label>
             Название <span className="modal-required">*</span>

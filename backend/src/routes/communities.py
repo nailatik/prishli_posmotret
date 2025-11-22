@@ -13,7 +13,8 @@ from ..database.db import (
     subscribe_user_to_community,
     get_community_by_id,
     is_user_subscribed,
-    unsubscribe_user_from_community
+    unsubscribe_user_from_community,
+    get_community_posts
 )
 
 from ..dependencies import get_current_user, get_current_user_optional
@@ -65,6 +66,11 @@ async def get_community(
                 pass  # Если ошибка при проверке подписки, просто оставляем False
         
         community["is_subscribed"] = is_subscribed
+        
+        # Получаем посты сообщества
+        posts = await get_community_posts(session, community_id)
+        community["posts"] = posts
+        
         return community
     except HTTPException:
         raise

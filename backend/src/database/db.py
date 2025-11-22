@@ -83,6 +83,7 @@ async def get_all_posts(session: AsyncSession):
     stmt = select(
         Post.post_id,
         Post.user_id,
+        Post.community_id,
         Post.title,
         Post.content,
         Post.picture,
@@ -94,17 +95,89 @@ async def get_all_posts(session: AsyncSession):
 
     posts = []
     for row in rows:
-        user = await get_user_by_id(session, row.user_id)
+        if row.community_id:
+            # Пост от сообщества
+            from .models.communities import Community
+            community_stmt = select(Community).where(Community.community_id == row.community_id)
+            community_result = await session.execute(community_stmt)
+            community = community_result.scalar_one_or_none()
+            
+            posts.append({
+                "post_id": row.post_id,
+                "author": {
+                    "community_id": community.community_id if community else None,
+                    "name": community.name if community else "Unknown Community"
+                },
+                "community": {
+                    "id": community.community_id if community else None,
+                    "name": community.name if community else "Unknown",
+                    "avatar": community.avatar if community else None
+                },
+                "title": row.title,
+                "description": row.content,
+                "picture": row.picture,
+                "likes_count": row.likes_count,
+                "is_community_post": True
+            })
+        else:
+            # Пост от пользователя
+            user = await get_user_by_id(session, row.user_id) if row.user_id else None
+            posts.append({
+                "post_id": row.post_id,
+                "author": {
+                    "user_id": user.user_id if user else None,
+                    "username": user.username if user else "Unknown"
+                },
+                "title": row.title,
+                "description": row.content,
+                "picture": row.picture,
+                "likes_count": row.likes_count,
+                "is_community_post": False
+            })
+
+    return posts
+
+async def get_community_posts(session: AsyncSession, community_id: int):
+    stmt = select(
+        Post.post_id,
+        Post.user_id,
+        Post.community_id,
+        Post.title,
+        Post.content,
+        Post.picture,
+        Post.likes_count,
+    ).where(Post.community_id == community_id).order_by(desc(Post.post_id))
+
+    result = await session.execute(stmt)
+    rows = result.fetchall()
+
+    posts = []
+    for row in rows:
+        from .models.communities import Community
+        community_stmt = select(Community).where(Community.community_id == row.community_id)
+        community_result = await session.execute(community_stmt)
+        community = community_result.scalar_one_or_none()
+        
+        # Загружаем комментарии для поста
+        comments = await get_comments_by_post_id(session, row.post_id)
+        
         posts.append({
             "post_id": row.post_id,
             "author": {
-                "user_id": user.user_id if user else None,
-                "username": user.username if user else "Unknown"
+                "community_id": community.community_id if community else None,
+                "name": community.name if community else "Unknown Community"
+            },
+            "community": {
+                "id": community.community_id if community else None,
+                "name": community.name if community else "Unknown",
+                "avatar": community.avatar if community else None
             },
             "title": row.title,
             "description": row.content,
             "picture": row.picture,
             "likes_count": row.likes_count,
+            "comments": comments,
+            "is_community_post": True
         })
 
     return posts
@@ -116,8 +189,14 @@ async def get_user_by_id(session: AsyncSession, id):
 
     return user
 
-async def create_post(session: AsyncSession, user_id: int, title: str, content: str, picture: str = None): 
-    db_post = Post(user_id=user_id, title=title, content=content, picture=picture)
+async def create_post(session: AsyncSession, user_id: int = None, community_id: int = None, title: str = None, content: str = None, picture: str = None): 
+    # Проверяем, что указан либо user_id, либо community_id
+    if not user_id and not community_id:
+        raise HTTPException(status_code=400, detail="Either user_id or community_id must be provided")
+    if user_id and community_id:
+        raise HTTPException(status_code=400, detail="Cannot specify both user_id and community_id")
+    
+    db_post = Post(user_id=user_id, community_id=community_id, title=title, content=content, picture=picture)
     session.add(db_post)
     await session.commit()
     await session.refresh(db_post)
