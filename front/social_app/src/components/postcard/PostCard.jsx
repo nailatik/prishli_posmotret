@@ -25,6 +25,9 @@ function PostCard({
   const [imageError, setImageError] = useState(false)
   const [imageUrl, setImageUrl] = useState(imgSrc)
 
+  // Новое состояние для переключения лайка
+  const [liked, setLiked] = useState(false)
+
   useEffect(() => {
     if (imgSrc) {
       setImageUrl(imgSrc)
@@ -35,6 +38,12 @@ function PostCard({
   const handleImageError = () => {
     console.error('Ошибка загрузки изображения:', imgSrc)
     setImageError(true)
+  }
+
+  // Обработчик клика по лайку с переключением состояния
+  const handleLikeClick = () => {
+    setLiked(!liked)
+    onLike && onLike(!liked) // если нужно, вызываем callback с новым состоянием
   }
 
   return (
@@ -166,12 +175,11 @@ function PostCard({
             >
               <ArrowUpwardIcon />
             </Button>
-          )}
-
+            )}
           </Box>
           <Button
             variant="contained"
-            color="warning"
+            color={liked ? 'error' : 'warning'} // меняем цвет кнопки в зависимости от liked
             size="small"
             sx={{
               width: 36,
@@ -184,11 +192,12 @@ function PostCard({
               padding: 0,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              transition: 'background-color 0.3s ease'
             }}
-            onClick={onLike}
+            onClick={handleLikeClick}
           >
-            ❤
+            {liked ? '❤️' : '❤'}
           </Button>
         </Box>
       </Box>
