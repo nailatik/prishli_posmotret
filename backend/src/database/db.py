@@ -8,7 +8,8 @@ from sqlalchemy.exc import IntegrityError
 
 from fastapi.exceptions import HTTPException
 
-
+from fastapi import Depends, Header
+from typing import Optional
 from ..config import DATABASE_URL
 from .models.base import Base
 from .models.posts import Post
@@ -372,3 +373,56 @@ async def get_community_by_id(session: AsyncSession, com_id: int):
     community = result.scalar_one_or_none()
 
     return community
+
+
+
+async def get_current_user(
+    authorization: Optional[str] = Header(None),
+    session: AsyncSession = Depends(get_db)
+):
+    """
+    Возвращает текущего пользователя по токену в заголовке Authorization
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Invalid auth scheme")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid Authorization header")
+
+    # В этом примере токен — username пользователя
+    user = await get_by_username(session, token)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
+from fastapi import Depends, HTTPException, Header
+from typing import Optional
+
+async def get_current_user(
+    authorization: Optional[str] = Header(None),
+    session: AsyncSession = Depends(get_db)
+):
+    """
+    Возвращает текущего пользователя по токену в заголовке Authorization
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Invalid auth scheme")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid Authorization header")
+
+    # В этом примере токен — username пользователя
+    user = await get_by_username(session, token)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
+
