@@ -2,25 +2,41 @@ import React, { useState, useRef, useEffect } from 'react'
 import Header from '../../components/header/Header'
 import './Communities.css'
 
-const MOCK_COMMUNITIES = Array.from({ length: 100 }).map((_, idx) => ({
-  id: idx + 1,
-  name: `Сообщество ${idx + 1}`,
-  avatar: `https://api.dicebear.com/7.x/fun/svg?seed=${idx + 1}`,
-  description: `Описание сообщества номер ${idx + 1}. Очень интересное и классное место!`
-}))
-
 const PAGE_SIZE = 20
 
 function Communities() {
   const [query, setQuery] = useState('')
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE)
+  const [allCommunities, setAllCommunities] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const filtered = MOCK_COMMUNITIES.filter(c =>
+  const loaderRef = useRef(null)
+
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        setLoading(true)
+        const currentUserId = 1 // TODO: получить из контекста/авторизации
+        const response = await fetch(`http://localhost:8000/api/user/${currentUserId}/communities`)
+        if (!response.ok) {
+          throw new Error('Ошибка загрузки сообществ')
+        }
+        const data = await response.json()
+        setAllCommunities(data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCommunities()
+  }, [])
+
+  const filtered = allCommunities.filter(c =>
     c.name.toLowerCase().includes(query.toLowerCase())
   )
   const communitiesToDisplay = filtered.slice(0, displayCount)
-
-  const loaderRef = useRef(null)
 
   useEffect(() => {
     if (!loaderRef.current) return
@@ -42,11 +58,33 @@ function Communities() {
     alert(`Открыть: ${community.name}`)
   }
 
+  if (loading) {
+    return (
+      <div className="communities-page">
+        <Header />
+        <main className="communities-content">
+          <div className="communities-loader">Загрузка сообществ...</div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="communities-page">
+        <Header />
+        <main className="communities-content">
+          <div className="communities-empty">Ошибка: {error}</div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="communities-page">
       <Header />
       <main className="communities-content">
-        <h1 className="communities-title">Наши сообщества</h1>
+        <h1 className="communities-title">Мои сообщества</h1>
         <div className="communities-search-wrap">
           <input
             className="communities-search"
