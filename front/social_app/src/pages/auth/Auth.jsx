@@ -4,6 +4,7 @@ import './Auth.css'
 import { TextField, Button, Alert, CircularProgress } from '@mui/material'
 import { useApi } from '../../hooks/useApi'
 import { API_BASE_URL } from '../../config/api'
+import logo from '../../assets/logo.png'
 
 function Auth() {
   const [flipped, setFlipped] = useState(false)
@@ -110,6 +111,11 @@ function Auth() {
 
   return (
     <div className="auth-background">
+      <div className="auth-logo-wrapper">
+        <img src={logo} alt="Logo" className="auth-logo" />
+        <div className="auth-logo-text">SPRING</div>
+      </div>
+
       <div className={`auth-card${flipped ? ' flipped' : ''}`}>
         {/* Фронт (вход) */}
         <div className="auth-card-face auth-card-front">

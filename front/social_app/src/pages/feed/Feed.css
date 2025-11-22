@@ -34,3 +34,17 @@
   background: #f8f8f8;
   border-radius: 37px;         
 }
+
+.feed-logo {
+  position: absolute;   /* чтобы элемент не влиял на поток */
+  top: 95px;           /* смещение вниз на 95px */
+  right: 10px;          /* прилипание к правому краю с отступом 10px */
+  text-align: left;   
+  font-size: 48px;  
+  letter-spacing: 2px;  
+  padding-left: 0;      
+  height: auto;         
+  width: auto;          
+  z-index: 10;          
+  margin-right: 10px;
+}

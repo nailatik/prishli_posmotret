@@ -93,6 +93,8 @@ function Feed() {
           <h1 className="feed-title">Мои Новости</h1>
           <Sidebar onPostCreated={fetchPosts} />
         </div>
+        {/* <div className="feed-logo">SPRING</div> */}
+        <h3 className="feed-logo">SPRING</h3>
         <div className="feed-content">
           <FeedList
             posts={posts}

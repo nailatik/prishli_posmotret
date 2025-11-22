@@ -5,7 +5,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative; /* для позиционирования логотипа */
 }
+
+.auth-logo {
+  height: 300px; /* настрой размер под свой логотип */
+  width: auto;
+  z-index: 10; /* чтобы был поверх всего */
+  margin-top: -50px; 
+  margin-left: -50px;
+}
+
+.auth-logo-wrapper {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* выравнивание по центру */
+  z-index: 10;
+}
+
+.auth-logo-text {
+  margin-top: -90px; 
+  margin-left: -50px;
+  font-size: 32px;
+  color: white;
+  font-weight: 600;
+  white-space: nowrap;
+  padding-left: 0; /* убрать отступ слева */
+}
+
 
 /* Контейнер карточки с 3D-перспективой */
 .auth-card {
