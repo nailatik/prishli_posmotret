@@ -10,47 +10,47 @@ function Feed() {
   const [posts, setPosts] = useState([]) 
   const [commentsByPost, setCommentsByPost] = useState({})
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const data = await makeRequest('posts') 
-        console.log('Получены посты:', data)
-        // Проверяем структуру данных
-        if (data && Array.isArray(data)) {
-          data.forEach((post, index) => {
-            console.log(`Пост ${index + 1}:`, {
-              post_id: post.post_id,
-              picture: post.picture,
-              title: post.title
-            })
+  const fetchPosts = async () => {
+    try {
+      const data = await makeRequest('posts') 
+      console.log('Получены посты:', data)
+      // Проверяем структуру данных
+      if (data && Array.isArray(data)) {
+        data.forEach((post, index) => {
+          console.log(`Пост ${index + 1}:`, {
+            post_id: post.post_id,
+            picture: post.picture,
+            title: post.title
           })
-        }
-        setPosts(data) 
-
-        // Загружаем комментарии для каждого поста
-        if (data && Array.isArray(data)) {
-          const commentsPromises = data.map(async (post) => {
-            try {
-              const comments = await makeRequest(`posts/${post.post_id}/comments`)
-              return { postId: post.post_id, comments }
-            } catch (error) {
-              console.error(`Ошибка при загрузке комментариев для поста ${post.post_id}:`, error)
-              return { postId: post.post_id, comments: [] }
-            }
-          })
-          
-          const commentsResults = await Promise.all(commentsPromises)
-          const commentsMap = {}
-          commentsResults.forEach(({ postId, comments }) => {
-            commentsMap[postId] = comments
-          })
-          setCommentsByPost(commentsMap)
-        }
-      } catch (error) {
-        console.error('Ошибка при получении постов:', error)
+        })
       }
-    }
+      setPosts(data) 
 
+      // Загружаем комментарии для каждого поста
+      if (data && Array.isArray(data)) {
+        const commentsPromises = data.map(async (post) => {
+          try {
+            const comments = await makeRequest(`posts/${post.post_id}/comments`)
+            return { postId: post.post_id, comments }
+          } catch (error) {
+            console.error(`Ошибка при загрузке комментариев для поста ${post.post_id}:`, error)
+            return { postId: post.post_id, comments: [] }
+          }
+        })
+        
+        const commentsResults = await Promise.all(commentsPromises)
+        const commentsMap = {}
+        commentsResults.forEach(({ postId, comments }) => {
+          commentsMap[postId] = comments
+        })
+        setCommentsByPost(commentsMap)
+      }
+    } catch (error) {
+      console.error('Ошибка при получении постов:', error)
+    }
+  }
+
+  useEffect(() => {
     fetchPosts()
   }, []) 
 
@@ -91,7 +91,7 @@ function Feed() {
       <div className="feed-container">
         <div className="feed-left">
           <h1 className="feed-title">Мои Новости</h1>
-          <Sidebar />
+          <Sidebar onPostCreated={fetchPosts} />
         </div>
         <div className="feed-content">
           <FeedList
