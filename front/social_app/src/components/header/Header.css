@@ -37,3 +37,41 @@
 .header-nav a:hover {
   color: #c4c2c2;
 }
+
+.header-auth-btn {
+  color: white;
+  font-size: 23px;
+  font-weight: 500;
+  background: transparent;
+  border: 2px solid white;
+  border-radius: 8px;
+  padding: 13px 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: auto;
+}
+
+.header-auth-btn:hover {
+  background: white;
+  color: #8E8FFA;
+}
+
+.header-logout-btn {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.header-logout-btn:hover {
+  background: #ff6b6b;
+  color: white;
+}
+
+.header-login-btn {
+  border-color: white;
+  color: white;
+}
+
+.header-login-btn:hover {
+  background: white;
+  color: #8E8FFA;
+}
