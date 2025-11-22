@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
@@ -22,6 +22,20 @@ function PostCard({
 }) {
   const [comment, setComment] = useState('')
   const [focused, setFocused] = useState(false)
+  const [imageError, setImageError] = useState(false)
+  const [imageUrl, setImageUrl] = useState(imgSrc)
+
+  useEffect(() => {
+    if (imgSrc) {
+      setImageUrl(imgSrc)
+      setImageError(false)
+    }
+  }, [imgSrc])
+
+  const handleImageError = () => {
+    console.error('Ошибка загрузки изображения:', imgSrc)
+    setImageError(true)
+  }
 
   return (
     <Card
@@ -37,17 +51,20 @@ function PostCard({
         overflow: 'hidden'
       }}
     >
-      {imgSrc && (
+      {imgSrc && typeof imgSrc === 'string' && imgSrc.trim() !== '' && !imageError && (
         <CardMedia
           component="img"
-          image={imgSrc}
-          alt={title}
+          image={imageUrl}
+          alt={title || 'Post image'}
+          onError={handleImageError}
+          onLoad={() => console.log('Изображение загружено:', imageUrl)}
           sx={{
             width: 370,
             height: 370,
             objectFit: 'cover',
             borderRadius: 6,
-            mr: 3
+            mr: 3,
+            backgroundColor: '#f0f0f0'
           }}
         />
       )}

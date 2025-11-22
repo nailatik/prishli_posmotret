@@ -78,23 +78,31 @@ async def create_user(session: AsyncSession, username: str, password: str):
 
 async def get_all_posts(session: AsyncSession):
     stmt = select(
+        Post.post_id,
         Post.user_id,
         Post.title,
         Post.content,
+        Post.picture,
+        Post.likes_count,
     ).order_by(desc(Post.post_id))
 
     result = await session.execute(stmt)
     rows = result.fetchall()
 
-    posts = [
-        {
-            "author": await get_user_by_id(session, row.user_id),
+    posts = []
+    for row in rows:
+        user = await get_user_by_id(session, row.user_id)
+        posts.append({
+            "post_id": row.post_id,
+            "author": {
+                "user_id": user.user_id if user else None,
+                "username": user.username if user else "Unknown"
+            },
             "title": row.title,
-            "description": row.content
-        }
-        for row in rows
-    ]
-    print(posts)
+            "description": row.content,
+            "picture": row.picture,
+            "likes_count": row.likes_count,
+        })
 
     return posts
 
@@ -105,8 +113,8 @@ async def get_user_by_id(session: AsyncSession, id):
 
     return user
 
-async def create_post(session: AsyncSession, user_id: int, title: str, content: str): 
-    db_post = Post(user_id=user_id, title=title, content=content)
+async def create_post(session: AsyncSession, user_id: int, title: str, content: str, picture: str = None): 
+    db_post = Post(user_id=user_id, title=title, content=content, picture=picture)
     session.add(db_post)
     await session.commit()
     await session.refresh(db_post)
