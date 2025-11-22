@@ -2,25 +2,42 @@ import React, { useState, useRef, useEffect } from 'react'
 import Header from '../../components/header/Header'
 import './Friends.css'
 
-const MOCK_COMMUNITIES = Array.from({ length: 100 }).map((_, idx) => ({
-  id: idx + 1,
-  name: `Имя Фамилия ${idx + 1}`,
-  avatar: `https://api.dicebear.com/7.x/fun/svg?seed=${idx + 1}`,
-  description: `Цитата друга ${idx + 1}!`
-}))
-
 const PAGE_SIZE = 20
 
 function Communities() {
   const [query, setQuery] = useState('')
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE)
+  const [allFriends, setAllFriends] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const filtered = MOCK_COMMUNITIES.filter(c =>
+  const loaderRef = useRef(null)
+
+  // Заменяем MOCK_COMMUNITIES на запрос к бэку
+  useEffect(() => {
+    const fetchFriends = async () => {
+      try {
+        setLoading(true)
+        const currentUserId = 1 // TODO: получить из контекста/авторизации
+        const response = await fetch(`http://localhost:8000/api/friends/${currentUserId}`)
+        if (!response.ok) {
+          throw new Error('Ошибка загрузки друзей')
+        }
+        const data = await response.json()
+        setAllFriends(data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchFriends()
+  }, [])
+
+  const filtered = allFriends.filter(c =>
     c.name.toLowerCase().includes(query.toLowerCase())
   )
   const communitiesToDisplay = filtered.slice(0, displayCount)
-
-  const loaderRef = useRef(null)
 
   useEffect(() => {
     if (!loaderRef.current) return
@@ -40,6 +57,28 @@ function Communities() {
 
   const handleCardClick = (community) => {
     alert(`Открыть: ${community.name}`)
+  }
+
+  if (loading) {
+    return (
+      <div className="communities-page">
+        <Header />
+        <main className="communities-content">
+          <div className="communities-loader">Загрузка друзей...</div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="communities-page">
+        <Header />
+        <main className="communities-content">
+          <div className="communities-empty">Ошибка: {error}</div>
+        </main>
+      </div>
+    )
   }
 
   return (
