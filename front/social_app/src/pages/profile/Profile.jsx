@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import Header from '../../components/header/Header'
 import ProfileCard from '../../components/profile/ProfileCard'
 import './profile.css'
@@ -7,8 +8,16 @@ export default function Profile() {
   const [profileData, setProfileData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
-  const currentUserId = 1  
+  const currentUserId = 1
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      navigate('/auth')
+    }
+  }, [navigate])  
 
   useEffect(() => {
     const fetchProfile = async () => {

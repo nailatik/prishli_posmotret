@@ -1,10 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import Header from '../../components/header/Header'
 import Sidebar from '../../components/sidebar/Sidebar'
 import FeedList from '../../components/FeedList'
 import './Messages.css'
 
 function Messages() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      navigate('/auth')
+    }
+  }, [navigate])
   // Заглушка для списка диалогов
   const [dialogs] = useState([
     { id: 1, name: 'Имя Фамилия', avatar: 'https://randomuser.me/api/portraits/men/1.jpg', lastMessage: 'Привет, как дела?', unread: 2 },

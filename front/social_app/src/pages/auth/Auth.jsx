@@ -45,6 +45,9 @@ function Auth() {
       const data = await response.json()
       localStorage.setItem('access_token', data.access_token)
       localStorage.setItem('token_type', data.token_type)
+      if (data.user_id) {
+        localStorage.setItem('user_id', data.user_id.toString())
+      }
       
       // Отправляем событие об обновлении авторизации
       window.dispatchEvent(new Event('auth-change'))
@@ -89,6 +92,9 @@ function Auth() {
       const loginData = await loginResponse.json()
       localStorage.setItem('access_token', loginData.access_token)
       localStorage.setItem('token_type', loginData.token_type)
+      if (loginData.user_id) {
+        localStorage.setItem('user_id', loginData.user_id.toString())
+      }
       
       // Отправляем событие об обновлении авторизации
       window.dispatchEvent(new Event('auth-change'))

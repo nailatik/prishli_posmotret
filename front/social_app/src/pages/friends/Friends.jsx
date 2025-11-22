@@ -1,10 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import Header from '../../components/header/Header'
 import './Friends.css'
 
 const PAGE_SIZE = 20
 
 function Communities() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      navigate('/auth')
+    }
+  }, [navigate])
   const [query, setQuery] = useState('')
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE)
   const [allFriends, setAllFriends] = useState([])
