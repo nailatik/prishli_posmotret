@@ -1,11 +1,11 @@
 import React from 'react'
+import PostCardCom from './PostCardCom'  // путь к вашему компоненту
 import {
   Avatar,
   Typography,
   Button,
   Box,
-  Grid,
-  Paper
+  Grid
 } from '@mui/material'
 
 function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) {
@@ -17,9 +17,11 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
     name,
     description,
     avatar,
-    members_count  // предполагаем, что это число участников
+    members_count,
+    cover_image,
+    comments,
   } = community
-  
+
   const communityId = id || community_id
 
   return (
@@ -31,21 +33,26 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
             src={avatar || 'https://via.placeholder.com/150'}
             alt={name}
             className="community-main-avatar"
+            sx={{ width: 80, height: 80 }}
           />
         </Grid>
 
-        {/* Правая часть — информация */}
+        {/* Правая часть — информация и кнопки */}
         <Grid item xs>
-          <div className="community-info-block">
-            <Typography variant="h5" className="community-title">
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="h5" className="community-title" gutterBottom>
               {name || 'Без названия'}
             </Typography>
             <Typography variant="body2" color="textSecondary">
-              {members_count != null ? `${members_count} участник${members_count === 1 ? '' : 'ов'}` : 'Нет данных об участниках'}
+              {members_count != null 
+                ? `${members_count} участник${members_count === 1 ? '' : 'ов'}` 
+                : 'Нет данных об участниках'}
             </Typography>
-            <Typography variant="body1" className="community-description" sx={{ mt: 1 }}>
-              {description || 'Описание отсутствует'}
-            </Typography>
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body1" className="community-description">
+                {description || 'Описание отсутствует'}
+              </Typography>
+            </Box>
 
             {/* Кнопки подписки */}
             <Box sx={{ mt: 2 }}>
@@ -67,11 +74,20 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
                 </Button>
               )}
             </Box>
-          </div>
+          </Box>
+
+          {/* Карточка сообщества с изображением, комментариями и действиями */}
+          <PostCardCom
+            imgSrc={cover_image || ''}
+            communityName={name || ''}
+            avatarSrc={avatar || ''}
+            description={description || ''}
+            comments={comments || []}
+            onLike={() => console.log('Лайк сообщества')}
+            onSendComment={comment => console.log('Отправить комментарий:', comment)}
+          />
         </Grid>
       </Grid>
-
-      {/* Здесь можно добавить блок с постами сообщества или другим контентом */}
     </div>
   )
 }
