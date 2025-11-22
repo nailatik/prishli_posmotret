@@ -92,58 +92,64 @@ async def get_user_dialogs(
 ):
     """Получение списка всех диалогов пользователя"""
     try:
-        # Здесь нужно будет добавить функцию в scripts для получения списка диалогов
-        # Пока возвращаем заглушку
-        from sqlalchemy import select, or_, func
-        from ..database.models.messages import Message
-        from ..database.models.user import User  # предполагаю, что у вас есть модель User
+        from sqlalchemy import select, or_, func, and_
+        from ..models.message import Message
+        from ..database.db import get_user_data_by_id
         
         # Получаем уникальных собеседников
-        stmt = select(
-            func.distinct(
-                func.case(
-                    (Message.sender_id == user_id, Message.receiver_id),
-                    else_=Message.sender_id
-                )
+        # Используем CASE для определения ID собеседника
+        interlocutor_subquery = select(
+            func.case(
+                (Message.sender_id == user_id, Message.receiver_id),
+                else_=Message.sender_id
             ).label('interlocutor_id')
         ).where(
             or_(Message.sender_id == user_id, Message.receiver_id == user_id)
-        )
+        ).distinct().subquery()
         
+        stmt = select(interlocutor_subquery.c.interlocutor_id)
         result = await session.execute(stmt)
         interlocutor_ids = [row[0] for row in result.fetchall()]
         
-        # Получаем информацию о пользователях
+        # Получаем информацию о каждом собеседнике и последнем сообщении
         dialogs = []
         for interlocutor_id in interlocutor_ids:
-            # Получаем последнее сообщение
+            # Получаем последнее сообщение с этим собеседником
             last_msg_stmt = select(Message).where(
                 or_(
-                    (Message.sender_id == user_id) & (Message.receiver_id == interlocutor_id),
-                    (Message.sender_id == interlocutor_id) & (Message.receiver_id == user_id)
+                    and_(Message.sender_id == user_id, Message.receiver_id == interlocutor_id),
+                    and_(Message.sender_id == interlocutor_id, Message.receiver_id == user_id)
                 )
             ).order_by(Message.id.desc()).limit(1)
             
             last_msg_result = await session.execute(last_msg_stmt)
             last_message = last_msg_result.scalar_one_or_none()
             
-            # Получаем данные пользователя (предполагаю структуру User)
-            user_stmt = select(User).where(User.id == interlocutor_id)
-            user_result = await session.execute(user_stmt)
-            interlocutor = user_result.scalar_one_or_none()
+            if not last_message:
+                continue
             
-            if interlocutor and last_message:
+            # Получаем данные собеседника
+            interlocutor_data = await get_user_data_by_id(session, interlocutor_id)
+            
+            if interlocutor_data:
+                full_name = f"{interlocutor_data.first_name or ''} {interlocutor_data.last_name or ''}".strip()
+                
                 dialogs.append({
                     "id": interlocutor_id,
-                    "name": f"{interlocutor.first_name} {interlocutor.last_name}",  # адаптируй под свою модель
-                    "avatar": interlocutor.profile_picture or "https://via.placeholder.com/50",
-                    "lastMessage": last_message.content[:50],
+                    "name": full_name or f"User {interlocutor_id}",
+                    "avatar": interlocutor_data.avatar_url or "https://via.placeholder.com/50",
+                    "lastMessage": last_message.content[:50] if last_message.content else "(Изображение)",
                     "unread": 0  # можно добавить логику подсчета непрочитанных
                 })
         
+        # Сортируем диалоги по последнему сообщению (самые свежие сверху)
+        dialogs.sort(key=lambda x: x.get('lastMessage', ''), reverse=True)
+        
         return dialogs
     except Exception as e:
+        print(f"Error in get_user_dialogs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.get('/users/search')

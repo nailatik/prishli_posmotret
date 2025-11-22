@@ -168,6 +168,21 @@ function Messages() {
         const newMessage = await response.json()
         setMessages(prev => [...prev, newMessage])
         setMessageInput('')
+        
+        // Обновляем список диалогов чтобы этот диалог поднялся наверх
+        const token = localStorage.getItem('access_token')
+        const dialogsResponse = await fetch(
+          `${API_URL}/messages/dialogs/list?user_id=${currentUserId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        )
+        if (dialogsResponse.ok) {
+          const dialogsData = await dialogsResponse.json()
+          setDialogs(dialogsData)
+        }
       }
     } catch (error) {
       console.error('Ошибка отправки сообщения:', error)
