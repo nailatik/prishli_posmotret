@@ -14,7 +14,7 @@ function Messages() {
   const [messageInput, setMessageInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showNewDialogModal, setShowNewDialogModal] = useState(false)
-  const [availableUsers, setAvailableUsers] = useState([])
+  const [allUsers, setAllUsers] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const messagesEndRef = useRef(null)
 
@@ -95,12 +95,18 @@ function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Загрузка списка пользователей для нового диалога
-  const fetchAvailableUsers = async () => {
+  // Загрузка ВСЕХ пользователей при открытии модального окна
+  useEffect(() => {
+    if (showNewDialogModal && allUsers.length === 0) {
+      fetchAllUsers()
+    }
+  }, [showNewDialogModal])
+
+  const fetchAllUsers = async () => {
     try {
       const token = localStorage.getItem('access_token')
       const response = await fetch(
-        `${API_URL}/users/search?query=${searchQuery}`,
+        `${API_URL}/users/all`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -111,18 +117,26 @@ function Messages() {
       if (response.ok) {
         const data = await response.json()
         // Исключаем текущего пользователя
-        setAvailableUsers(data.filter(user => user.id !== currentUserId))
+        setAllUsers(data.filter(user => user.user_id !== currentUserId))
       }
     } catch (error) {
       console.error('Ошибка загрузки пользователей:', error)
     }
   }
 
-  useEffect(() => {
-    if (showNewDialogModal) {
-      fetchAvailableUsers()
-    }
-  }, [showNewDialogModal, searchQuery])
+  // Фильтрация пользователей по поисковому запросу
+  const filteredUsers = allUsers.filter(user => {
+    if (!searchQuery) return true
+    
+    const query = searchQuery.toLowerCase()
+    const firstName = user.first_name?.toLowerCase() || ''
+    const lastName = user.last_name?.toLowerCase() || ''
+    const username = user.username?.toLowerCase() || ''
+    
+    return firstName.includes(query) || 
+           lastName.includes(query) || 
+           username.includes(query)
+  })
 
   const handleDialogClick = (dialog) => {
     setSelectedDialog(dialog)
@@ -171,9 +185,9 @@ function Messages() {
 
   const handleStartNewDialog = (user) => {
     setSelectedDialog({
-      id: user.id,
-      name: `${user.first_name} ${user.last_name}`,
-      avatar: user.profile_picture || 'https://via.placeholder.com/50'
+      id: user.user_id,
+      name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || 'Пользователь',
+      avatar: user.avatar_url || 'https://via.placeholder.com/50'
     })
     setMessages([])
     setShowNewDialogModal(false)
@@ -317,22 +331,28 @@ function Messages() {
               />
               
               <div className="users-list">
-                {availableUsers.length === 0 ? (
-                  <p className="no-users">Пользователи не найдены</p>
+                {filteredUsers.length === 0 ? (
+                  <p className="no-users">
+                    {allUsers.length === 0 ? 'Загрузка пользователей...' : 'Пользователи не найдены'}
+                  </p>
                 ) : (
-                  availableUsers.map(user => (
+                  filteredUsers.map(user => (
                     <div
-                      key={user.id}
+                      key={user.user_id}
                       className="user-item"
                       onClick={() => handleStartNewDialog(user)}
                     >
                       <img 
-                        src={user.profile_picture || 'https://via.placeholder.com/50'} 
-                        alt={`${user.first_name} ${user.last_name}`}
+                        src={user.avatar_url || 'https://via.placeholder.com/50'} 
+                        alt={`${user.first_name || ''} ${user.last_name || ''}`}
                         className="user-avatar"
                       />
                       <div className="user-info">
-                        <h4>{user.first_name} {user.last_name}</h4>
+                        <h4>
+                          {user.first_name && user.last_name 
+                            ? `${user.first_name} ${user.last_name}` 
+                            : user.username || 'Пользователь'}
+                        </h4>
                         {user.username && <p>@{user.username}</p>}
                       </div>
                     </div>

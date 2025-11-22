@@ -1,4 +1,3 @@
-
 from .mainpage import router as mainpage_router
 from .communities import router as communities_router
 from .profile import router as profile_router

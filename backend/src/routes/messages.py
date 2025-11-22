@@ -185,3 +185,17 @@ async def search_users(
         ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get('/users/all')
+async def get_all_users_with_data(
+    session: Annotated[AsyncSession, Depends(get_db)]
+):
+    """Получение всех пользователей с их данными для выбора диалога"""
+    try:
+        from ..database.db import get_all_users_data
+        
+        users = await get_all_users_data(session)
+        
+        return users
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
