@@ -5,6 +5,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
+from datetime import datetime
+from database.models.user import User
+from database.models.user_data import UserData
 
 from ..database.db import (
     get_db,
@@ -21,6 +24,9 @@ from ..utils import create_access_token
 
 from ..dependencies import get_current_user
 
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()
 
@@ -52,6 +58,99 @@ async def sign_up(
         "id": user.user_id,
         "username": user.username,
     }
+
+@router.post("/seed-users")
+async def seed_users(
+    session: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        users_data = [
+            {
+                "username": "artem",
+                "password": "12345",
+                "first_name": "Артём",
+                "last_name": "Дрогдев",
+                "birthday": datetime(2004, 5, 28),
+                "gender": "Мужской",
+                "email": "artem@example.com",
+                "phone": "+79999999999",
+                "bio": "Основатель социальной сети 😎",
+                "city": "Москва",
+                "country": "Россия",
+            },
+            {
+                "username": "maria",
+                "password": "maria123",
+                "first_name": "Мария",
+                "last_name": "Иванова",
+                "birthday": datetime(2003, 3, 15),
+                "gender": "Женский",
+                "email": "maria@example.com",
+                "phone": "+78888888888",
+                "bio": "Люблю путешествия и фотографию 📸",
+                "city": "Санкт-Петербург",
+                "country": "Россия",
+            },
+            {
+                "username": "daniil",
+                "password": "qwerty",
+                "first_name": "Даниил",
+                "last_name": "Смирнов",
+                "birthday": datetime(2001, 8, 2),
+                "gender": "Мужской",
+                "email": "danil@example.com",
+                "phone": "+77777777777",
+                "bio": "Спорт — моя жизнь 🏋️‍♂️",
+                "city": "Казань",
+                "country": "Россия",
+            }
+        ]
+
+        created_users = []
+
+        for data in users_data:
+            hashed_password = pwd_context.hash(data["password"])
+
+            user = User(
+                username=data["username"],
+                hashed_password=hashed_password
+            )
+            session.add(user)
+            await session.flush()   
+
+            user_data = UserData(
+                user_id=user.user_id,
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                birthday=data["birthday"],
+                gender=data["gender"],
+                email=data["email"],
+                phone=data["phone"],
+                bio=data["bio"],
+                city=data["city"],
+                country=data["country"]
+            )
+            session.add(user_data)
+
+            created_users.append({
+                "user_id": user.user_id,
+                "username": user.username,
+                "first_name": data["first_name"],
+                "last_name": data["last_name"],
+                "email": data["email"],
+                "city": data["city"]
+            })
+
+        await session.commit()
+
+        return {
+            "message": f"Создано {len(created_users)} пользователей",
+            "users": created_users
+        }
+
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post('/token')
