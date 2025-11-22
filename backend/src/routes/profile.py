@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from ..database.db import (
     get_db,
     get_user_by_id,
-    get_all_posts_for_user
+    get_posts_by_user_id
 )
 
 
@@ -22,7 +22,7 @@ async def get_me(
     try:
         user = await get_user_by_id(session, id)
 
-        posts = await get_all_posts_for_user(session, id)
+        posts = await get_posts_by_user_id(session, id)
         posts_response = [post.to_pydantic() for post in posts]
 
         response = {
