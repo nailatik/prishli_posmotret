@@ -27,14 +27,16 @@ Spring помогает расширить кругозор, выйти из и�
 ## 🚀 Установка
 
 Установление переменных окружения:
+```
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=admin
 DB_HOST=database
 DB_PORT=5432
 POSTGRES_DB=chat_app
-
+```
+```
 Запуск приложения через Docker:
-```bash
+
 docker compose up --build
 ```
 
