@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router'
 import Header from '../../components/header/Header'
 import './Messages.css'
 
-const API_URL = 'http://localhost:8000/api'  // измени на свой URL
+const API_URL = 'http://localhost:8000/api'
 
 function Messages() {
   const navigate = useNavigate()
-  const [currentUserId, setCurrentUserId] = useState(null)
   const [dialogs, setDialogs] = useState([])
   const [selectedDialog, setSelectedDialog] = useState(null)
   const [messages, setMessages] = useState([])
@@ -18,57 +17,51 @@ function Messages() {
   const [searchQuery, setSearchQuery] = useState('')
   const messagesEndRef = useRef(null)
 
-  // Проверка авторизации и получение ID текущего пользователя
+  // Проверка авторизации
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) {
       navigate('/auth')
-      return
     }
-
-    const userId = localStorage.getItem('user_id')
-    setCurrentUserId(parseInt(userId))
   }, [navigate])
 
   // Загрузка списка диалогов
   useEffect(() => {
-    if (!currentUserId) return
-
-    const fetchDialogs = async () => {
-      try {
-        const token = localStorage.getItem('access_token')
-        const response = await fetch(
-          `${API_URL}/messages/dialogs/list?user_id=${currentUserId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        )
-        
-        if (response.ok) {
-          const data = await response.json()
-          setDialogs(data)
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки диалогов:', error)
-      }
-    }
-
     fetchDialogs()
     const interval = setInterval(fetchDialogs, 5000)
     return () => clearInterval(interval)
-  }, [currentUserId])
+  }, [])
+
+  const fetchDialogs = async () => {
+    try {
+      const token = localStorage.getItem('access_token')
+      const response = await fetch(
+        `${API_URL}/messages/dialogs/list`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      )
+      
+      if (response.ok) {
+        const data = await response.json()
+        setDialogs(data)
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки диалогов:', error)
+    }
+  }
 
   // Загрузка сообщений выбранного диалога
   useEffect(() => {
-    if (!selectedDialog || !currentUserId) return
+    if (!selectedDialog) return
 
     const fetchMessages = async () => {
       try {
         const token = localStorage.getItem('access_token')
         const response = await fetch(
-          `${API_URL}/messages/${selectedDialog.id}?current_user_id=${currentUserId}`,
+          `${API_URL}/messages/${selectedDialog.id}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -88,7 +81,7 @@ function Messages() {
     fetchMessages()
     const interval = setInterval(fetchMessages, 2000)
     return () => clearInterval(interval)
-  }, [selectedDialog, currentUserId])
+  }, [selectedDialog])
 
   // Автоскролл вниз при новых сообщениях
   useEffect(() => {
@@ -116,8 +109,7 @@ function Messages() {
       
       if (response.ok) {
         const data = await response.json()
-        // Исключаем текущего пользователя
-        setAllUsers(data.filter(user => user.user_id !== currentUserId))
+        setAllUsers(data)
       }
     } catch (error) {
       console.error('Ошибка загрузки пользователей:', error)
@@ -143,13 +135,13 @@ function Messages() {
   }
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !selectedDialog || !currentUserId) return
+    if (!messageInput.trim() || !selectedDialog) return
 
     setLoading(true)
     try {
       const token = localStorage.getItem('access_token')
       const response = await fetch(
-        `${API_URL}/messages/send?sender_id=${currentUserId}`,
+        `${API_URL}/messages/send`,
         {
           method: 'POST',
           headers: {
@@ -169,20 +161,8 @@ function Messages() {
         setMessages(prev => [...prev, newMessage])
         setMessageInput('')
         
-        // Обновляем список диалогов чтобы этот диалог поднялся наверх
-        const token = localStorage.getItem('access_token')
-        const dialogsResponse = await fetch(
-          `${API_URL}/messages/dialogs/list?user_id=${currentUserId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        )
-        if (dialogsResponse.ok) {
-          const dialogsData = await dialogsResponse.json()
-          setDialogs(dialogsData)
-        }
+        // Обновляем список диалогов
+        fetchDialogs()
       }
     } catch (error) {
       console.error('Ошибка отправки сообщения:', error)
@@ -208,6 +188,19 @@ function Messages() {
     setShowNewDialogModal(false)
     setSearchQuery('')
   }
+
+  // Функция для определения текущего пользователя из сообщений
+  const getCurrentUserId = () => {
+    if (messages.length === 0) return null
+    // Берем первое сообщение и определяем, кто НЕ selectedDialog.id
+    const firstMsg = messages[0]
+    if (firstMsg.sender_id === selectedDialog.id) {
+      return firstMsg.receiver_id
+    }
+    return firstMsg.sender_id
+  }
+
+  const currentUserId = getCurrentUserId()
 
   return (
     <div className="messages-page">
@@ -275,7 +268,7 @@ function Messages() {
                   </div>
                 ) : (
                   messages.map((msg, index) => {
-                    const isMine = msg.sender_id === currentUserId
+                    const isMine = currentUserId ? msg.sender_id === currentUserId : msg.receiver_id === selectedDialog.id
                     return (
                       <div key={index} className={`message ${isMine ? 'me' : 'them'}`}>
                         <div className="message-bubble">
@@ -310,13 +303,7 @@ function Messages() {
             </>
           ) : (
             <div className="no-dialog-selected">
-              <p>Выберите диалог или начните новый</p>
-              <button 
-                className="start-dialog-btn-center"
-                onClick={() => setShowNewDialogModal(true)}
-              >
-                Начать новый диалог
-              </button>
+              <p>Выберите диалог чтобы начать общение</p>
             </div>
           )}
         </main>

@@ -3,12 +3,13 @@ from fastapi import APIRouter, HTTPException, Depends, Body
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 
-from ..database.db import get_db
-from ..database.db import (
+from ..database.db import get_db, get_by_username
+from ..database.scripts import (
     create_message,
     get_messages_between_users,
     delete_message
 )
+from ..auth.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -30,14 +31,19 @@ class MessageResponse(BaseModel):
 @router.post('/messages/send')
 async def send_message(
     session: Annotated[AsyncSession, Depends(get_db)],
-    sender_id: int,
-    message_data: MessageCreate
+    current_user: dict = Depends(get_current_user),
+    message_data: MessageCreate = Body(...)
 ):
     """Отправка нового сообщения"""
     try:
+        # Получаем user_id из username
+        user = await get_by_username(session, current_user["username"])
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
         new_message = await create_message(
             session=session,
-            sender_id=sender_id,
+            sender_id=user.user_id,
             receiver_id=message_data.receiver_id,
             content=message_data.content,
             picture_url=message_data.picture_url
@@ -58,13 +64,18 @@ async def send_message(
 async def get_messages_with_user(
     session: Annotated[AsyncSession, Depends(get_db)],
     user_id: int,
-    current_user_id: int
+    current_user: dict = Depends(get_current_user)
 ):
     """Получение всех сообщений между двумя пользователями"""
     try:
+        # Получаем user_id из username
+        user = await get_by_username(session, current_user["username"])
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
         messages = await get_messages_between_users(
             session=session,
-            user1_id=current_user_id,
+            user1_id=user.user_id,
             user2_id=user_id
         )
         return messages
@@ -75,7 +86,8 @@ async def get_messages_with_user(
 @router.delete('/messages/{message_id}')
 async def remove_message(
     session: Annotated[AsyncSession, Depends(get_db)],
-    message_id: int
+    message_id: int,
+    current_user: dict = Depends(get_current_user)
 ):
     """Удаление сообщения"""
     try:
@@ -88,16 +100,22 @@ async def remove_message(
 @router.get('/messages/dialogs/list')
 async def get_user_dialogs(
     session: Annotated[AsyncSession, Depends(get_db)],
-    user_id: int
+    current_user: dict = Depends(get_current_user)
 ):
     """Получение списка всех диалогов пользователя"""
     try:
         from sqlalchemy import select, or_, func, and_
         from ..models.message import Message
-        from ..database.db import get_user_data_by_id
+        from ..database.db import get_user_data_by_id, get_by_username
+        
+        # Получаем user_id из username
+        user = await get_by_username(session, current_user["username"])
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user.user_id
         
         # Получаем уникальных собеседников
-        # Используем CASE для определения ID собеседника
         interlocutor_subquery = select(
             func.case(
                 (Message.sender_id == user_id, Message.receiver_id),
@@ -139,11 +157,8 @@ async def get_user_dialogs(
                     "name": full_name or f"User {interlocutor_id}",
                     "avatar": interlocutor_data.avatar_url or "https://via.placeholder.com/50",
                     "lastMessage": last_message.content[:50] if last_message.content else "(Изображение)",
-                    "unread": 0  # можно добавить логику подсчета непрочитанных
+                    "unread": 0
                 })
-        
-        # Сортируем диалоги по последнему сообщению (самые свежие сверху)
-        dialogs.sort(key=lambda x: x.get('lastMessage', ''), reverse=True)
         
         return dialogs
     except Exception as e:
@@ -151,57 +166,23 @@ async def get_user_dialogs(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
-@router.get('/users/search')
-async def search_users(
-    session: Annotated[AsyncSession, Depends(get_db)],
-    query: str = ""
-):
-    """Поиск пользователей для начала диалога"""
-    try:
-        from sqlalchemy import select, or_
-        from ..models.user import User  # адаптируй под свою модель
-        
-        stmt = select(User)
-        
-        if query:
-            search_pattern = f"%{query}%"
-            stmt = stmt.where(
-                or_(
-                    User.first_name.ilike(search_pattern),
-                    User.last_name.ilike(search_pattern),
-                    User.username.ilike(search_pattern)
-                )
-            )
-        
-        stmt = stmt.limit(20)  # Ограничиваем 20 результатами
-        
-        result = await session.execute(stmt)
-        users = result.scalars().all()
-        
-        return [
-            {
-                "id": user.id,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "username": getattr(user, 'username', None),
-                "profile_picture": getattr(user, 'profile_picture', None)
-            }
-            for user in users
-        ]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
 @router.get('/users/all')
 async def get_all_users_with_data(
-    session: Annotated[AsyncSession, Depends(get_db)]
+    session: Annotated[AsyncSession, Depends(get_db)],
+    current_user: dict = Depends(get_current_user)
 ):
     """Получение всех пользователей с их данными для выбора диалога"""
     try:
-        from ..database.db import get_all_users_data
+        from ..database.db import get_all_users_data, get_by_username
+        
+        # Получаем user_id текущего пользователя
+        user = await get_by_username(session, current_user["username"])
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
         
         users = await get_all_users_data(session)
         
-        return users
+        # Исключаем текущего пользователя
+        return [u for u in users if u['user_id'] != user.user_id]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
