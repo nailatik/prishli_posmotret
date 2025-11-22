@@ -9,27 +9,27 @@ function Feed() {
   const { makeRequest } = useApi()
   const [posts, setPosts] = useState([]) 
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const data = await makeRequest('posts') 
-        console.log('Получены посты:', data)
-        // Проверяем структуру данных
-        if (data && Array.isArray(data)) {
-          data.forEach((post, index) => {
-            console.log(`Пост ${index + 1}:`, {
-              post_id: post.post_id,
-              picture: post.picture,
-              title: post.title
-            })
+  const fetchPosts = async () => {
+    try {
+      const data = await makeRequest('posts') 
+      console.log('Получены посты:', data)
+      // Проверяем структуру данных
+      if (data && Array.isArray(data)) {
+        data.forEach((post, index) => {
+          console.log(`Пост ${index + 1}:`, {
+            post_id: post.post_id,
+            picture: post.picture,
+            title: post.title
           })
-        }
-        setPosts(data) 
-      } catch (error) {
-        console.error('Ошибка при получении постов:', error)
+        })
       }
+      setPosts(data) 
+    } catch (error) {
+      console.error('Ошибка при получении постов:', error)
     }
+  }
 
+  useEffect(() => {
     fetchPosts()
   }, []) 
 
@@ -49,7 +49,7 @@ function Feed() {
       <div className="feed-container">
         <div className="feed-left">
           <h1 className="feed-title">Мои Новости</h1>
-          <Sidebar />
+          <Sidebar onPostCreated={fetchPosts} />
         </div>
         <div className="feed-content">
           <FeedList

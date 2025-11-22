@@ -1,17 +1,45 @@
 import React, { useState } from 'react'
+import { useApi } from '../../hooks/useApi'
 import './CreatePostModal.css'
 
-function CreatePostModal({ onClose }) {
+function CreatePostModal({ onClose, onPostCreated }) {
+  const { makeRequest } = useApi()
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
-  const [file, setFile] = useState(null)
+  const [picture, setPicture] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const isReady = !!title.trim()
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
-    // Здесь логика создания поста
-    onClose()
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      await makeRequest('create-post', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: title.trim(),
+          content: desc.trim() || '',
+          picture: picture.trim() || null
+        })
+      })
+      
+      // Обновляем список постов
+      if (onPostCreated) {
+        await onPostCreated()
+      }
+      
+      // Закрываем модальное окно
+      onClose()
+    } catch (err) {
+      console.error('Ошибка при создании поста:', err)
+      setError(err.message || 'Не удалось создать пост')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -41,21 +69,27 @@ function CreatePostModal({ onClose }) {
             />
           </label>
           <label>
-            Вложение
+            URL картинки
             <input
-              className="modal-file"
-              type="file"
-              accept="image/*,.pdf,.doc,.docx"
-              onChange={e => setFile(e.target.files[0])}
+              className="modal-input"
+              type="url"
+              value={picture}
+              onChange={e => setPicture(e.target.value)}
+              placeholder="https://example.com/image.jpg"
             />
           </label>
+          {error && (
+            <div style={{ color: '#d32f2f', fontSize: '14px', marginTop: '-10px' }}>
+              {error}
+            </div>
+          )}
           <div className="modal-actions">
             <button
               type="submit"
               className="modal-submit"
-              disabled={!isReady}
+              disabled={!isReady || isLoading}
             >
-              Создать
+              {isLoading ? 'Создание...' : 'Создать'}
             </button>
             <button
               type="button"

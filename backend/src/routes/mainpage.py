@@ -11,7 +11,8 @@ from ..database.db import (
     get_all_posts,
     create_post as create_post_db,
     create_user,
-    authenticate_user
+    authenticate_user,
+    get_by_username
 )
 
 from ..utils import create_access_token
@@ -25,6 +26,12 @@ router = APIRouter()
 class SignUpRequest(BaseModel):
     username: str
     password: str
+
+
+class CreatePostRequest(BaseModel):
+    title: str
+    content: str
+    picture: str | None = None
 
 
 @router.post('/sign-up')
@@ -69,17 +76,34 @@ async def get_posts(
 
 @router.post('/create-post')
 async def create_post(
+    post_data: CreatePostRequest,
+    user: Annotated[get_current_user, Depends()],
     session: Annotated[AsyncSession, Depends(get_db)]
 ):
     try:
-        post = await create_post_db(session=session, user_id=1, title="Title test", content="Content testing")
+        # Получаем user_id из username
+        db_user = await get_by_username(session, user["username"])
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Создаем пост
+        post = await create_post_db(
+            session=session,
+            user_id=db_user.user_id,
+            title=post_data.title,
+            content=post_data.content,
+            picture=post_data.picture
+        )
         return {
             "post_id": post.post_id,
             "user_id": post.user_id,
+            "title": post.title,
             "content": post.content,
             "picture": post.picture,
             "likes_count": post.likes_count,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import './Sidebar.css'
 import CreatePostModal from './CreatePostModal'
 
-function Sidebar() {
+function Sidebar({ onPostCreated }) {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
@@ -17,6 +17,7 @@ function Sidebar() {
       {modalOpen && (
         <CreatePostModal
           onClose={() => setModalOpen(false)}
+          onPostCreated={onPostCreated}
         />
       )}
     </>
