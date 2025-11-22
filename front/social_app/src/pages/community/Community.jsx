@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router'
+import { useParams, useNavigate } from 'react-router'
 import Header from '../../components/header/Header'
 import CommunityCard from '../../components/community/CommunityCard'
 import { useApi } from '../../hooks/useApi'
 
 export default function CommunityPage() {
   const { communityId } = useParams()
+  const navigate = useNavigate()
   const { makeRequest } = useApi()
   const [communityData, setCommunityData] = useState(null)
   const [isSubscribed, setIsSubscribed] = useState(false)
@@ -71,6 +72,37 @@ export default function CommunityPage() {
     }
   }
 
+  const handleSendComment = async (postId, comment) => {
+    if (!comment || !comment.trim()) {
+      return
+    }
+
+    // Проверяем авторизацию
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      navigate('/auth')
+      return
+    }
+
+    try {
+      await makeRequest('comments', {
+        method: 'POST',
+        body: JSON.stringify({
+          post_id: postId,
+          content: comment.trim()
+        })
+      })
+      console.log('Комментарий успешно отправлен')
+      
+      // Обновляем данные сообщества
+      const data = await makeRequest(`communities/${communityId}`)
+      setCommunityData(data)
+    } catch (error) {
+      console.error('Ошибка при отправке комментария:', error)
+      alert('Не удалось отправить комментарий')
+    }
+  }
+
   if (loading) return <div>Загрузка...</div>
   if (error) return <div>Ошибка: {error}</div>
 
@@ -84,6 +116,7 @@ export default function CommunityPage() {
           onSubscribe={handleSubscribe}
           onUnsubscribe={handleUnsubscribe}
           onPostCreated={handlePostCreated}
+          onSendComment={handleSendComment}
         />
       </div>
     </div>

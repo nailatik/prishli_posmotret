@@ -10,7 +10,7 @@ import {
 } from '@mui/material'
 import { DEFAULT_AVATAR_URL } from '../../config/api'
 
-function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe, onPostCreated }) {
+function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe, onPostCreated, onSendComment }) {
   const [modalOpen, setModalOpen] = useState(false)
   
   if (!community) return null
@@ -109,7 +109,7 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe, on
                   description={post.description || ''}
                   comments={post.comments || []}
                   onLike={() => console.log('Лайк поста:', post.post_id)}
-                  onSendComment={comment => console.log('Отправить комментарий:', comment)}
+                  onSendComment={comment => onSendComment?.(post.post_id, comment)}
                   sx={{ mb: 2 }}
                 />
               ))}
