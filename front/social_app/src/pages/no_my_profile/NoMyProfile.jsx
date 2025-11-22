@@ -1,134 +1,62 @@
-import React from 'react';
-import {
-  Avatar,
-  Typography,
-  Button,
-  Box,
-  Grid,
-  Paper
-} from '@mui/material';
-import './ProfileCard.css';
+import React, { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import Header from '../../components/header/Header'
+import ProfileCard from '../../components/profile/ProfileCard'
+import { Button, Box } from '@mui/material'
+import './noMyProfile.css'
 
-function ProfileCard() {
+export default function NoMyProfile() {
+  const { userId } = useParams()
+  const [profileData, setProfileData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`http://localhost:8000/api/profile/${userId}`)
+        if (!response.ok) {
+          throw new Error('Ошибка загрузки профиля')
+        }
+        const data = await response.json()
+        setProfileData(data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProfile()
+  }, [userId])
+
+  const handleAddFriend = () => {
+    alert(`Добавить пользователя ${profileData.first_name} в друзья`)
+  }
+
+  const handleSendMessage = () => {
+    alert(`Написать сообщение пользователю ${profileData.first_name}`)
+  }
+
+  if (loading) return <div>Загрузка...</div>
+  if (error) return <div>Ошибка: {error}</div>
+
+  // Отрисовка ProfileCard с переданными данными
+  // Добавляем кнопки «Добавить в друзья» и «Написать сообщение»
   return (
-    <div className="profile-page-bg">
-      <Grid container spacing={3} alignItems="flex-start" className="profile-main-row">
-        {/* Левая часть — фото */}
-        <Grid item>
-          <Avatar
-            src="photo_url.jpg"
-            alt="Тайлер Дерден"
-            className="profile-main-avatar"
-          />
-        </Grid>
-
-        {/* Правая часть — информация */}
-        <Grid item xs>
-          <div className="profile-info-block">
-            <Typography variant="h5" className="profile-title">
-              Тайлер Дерден
-            </Typography>
-            <div className="profile-line">
-              <span className="profile-label">Друзья</span>
-              <span className="profile-value">1000</span>
-            </div>
-            <div className="profile-line">
-              <span className="profile-label">Университет</span>
-              <span className="profile-value">
-                Самый лучший вуз мира – СГУ им.Чернышевского
-              </span>
-            </div>
-          </div>
-           
-        </Grid>
-      </Grid>
-
-      {/* Блок "Возможно знакомы" */}
-      <div className="profile-acquaintances-block">
-        <Typography className="profile-acquaintances-title">
-          возможно знакомы
-        </Typography>
-        <div className="profile-acquaintances-list">
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          {/* Пустые карточки — заглушки */}
-          <div className="empty-card" />
-          <div className="empty-card" />
-          <div className="empty-card" />
-        </div>
-        
+    <div>
+      <Header />
+      <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
+        <ProfileCard profile={profileData} />
+        <Box sx={{ mt: 2 }}>
+          <Button variant="outlined" color="primary" sx={{ mr: 1 }} onClick={handleAddFriend}>
+            Добавить в друзья
+          </Button>
+          <Button variant="outlined" color="secondary" onClick={handleSendMessage}>
+            Написать сообщение
+          </Button>
+        </Box>
       </div>
-      
     </div>
-  );
+  )
 }
-
-export default ProfileCard;
