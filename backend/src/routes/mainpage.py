@@ -53,13 +53,41 @@ async def sign_up(
     signup_data: SignUpRequest,
     session: Annotated[AsyncSession, Depends(get_db)],
 ):
-    user = await create_user(session, username=signup_data.username, password=signup_data.password)
-
-    return {
-        "id": user.user_id,
-        "username": user.username,
-        "first_name": user.username
-    }
+    from datetime import datetime
+    from ..database.models.user_data import UserData
+    
+    try:
+        # Создаем пользователя
+        user = await create_user(session, username=signup_data.username, password=signup_data.password)
+        
+        # СОЗДАЕМ UserData
+        user_data = UserData(
+            user_id=user.user_id,
+            first_name="",
+            last_name="",
+            birthday=datetime.now(),
+            gender="Не указан",
+            email=None,
+            phone=None,
+            bio="Пусто",
+            city="Пусто",
+            country="Пусто",
+            is_active=True
+        )
+        session.add(user_data)
+        
+        # Используем flush вместо commit для сохранения без завершения транзакции
+        await session.flush()
+        
+        # Теперь можно безопасно обращаться к user.user_id
+        return {
+            "id": user.user_id,
+            "username": user.username,
+        }
+        
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/seed-users")
 async def seed_users(
