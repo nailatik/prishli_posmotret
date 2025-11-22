@@ -1,50 +1,144 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import Header from '../../components/header/Header'
-import Sidebar from '../../components/sidebar/Sidebar'
-import FeedList from '../../components/FeedList'
 import './Messages.css'
+
+const API_URL = 'http://localhost:8000/api'  // измени на свой URL
 
 function Messages() {
   const navigate = useNavigate()
+  const [currentUserId, setCurrentUserId] = useState(null)
+  const [dialogs, setDialogs] = useState([])
+  const [selectedDialog, setSelectedDialog] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [messageInput, setMessageInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const messagesEndRef = useRef(null)
 
+  // Проверка авторизации и получение ID текущего пользователя
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) {
       navigate('/auth')
+      return
     }
+
+    // Получаем ID текущего пользователя из токена или из отдельного API
+    // Предполагаю, что у тебя есть способ получить current user ID
+    const userId = localStorage.getItem('user_id') // или декодируй из JWT
+    setCurrentUserId(parseInt(userId))
   }, [navigate])
-  // Заглушка для списка диалогов
-  const [dialogs] = useState([
-    { id: 1, name: 'Имя Фамилия', avatar: 'https://randomuser.me/api/portraits/men/1.jpg', lastMessage: 'Привет, как дела?', unread: 2 },
-    { id: 2, name: 'Анна Смирнова', avatar: 'https://randomuser.me/api/portraits/women/2.jpg', lastMessage: 'Увидимся завтра!', unread: 0 },
-    { id: 3, name: 'Петр Иванов', avatar: 'https://randomuser.me/api/portraits/men/3.jpg', lastMessage: 'Спасибо за помощь', unread: 1 },
-    { id: 4, name: 'Мария Козлова', avatar: 'https://randomuser.me/api/portraits/women/4.jpg', lastMessage: 'Отправил файлы', unread: 0 },
-    { id: 5, name: 'Сергей Попов', avatar: 'https://randomuser.me/api/portraits/men/5.jpg', lastMessage: 'Когда встретимся?', unread: 0 },
-  ])
 
-  const [selectedDialog, setSelectedDialog] = useState(null)
-  const [messages, setMessages] = useState([])
+  // Загрузка списка диалогов
+  useEffect(() => {
+    if (!currentUserId) return
 
-  // Заглушка сообщений для выбранного диалога
-  const loadMessages = (dialogId) => {
-    const mockMessages = {
-      1: [
-        { id: 1, text: 'Привет!', sender: 'me', time: '14:20' },
-        { id: 2, text: 'Привет, как дела?', sender: 'them', time: '14:22' },
-        { id: 3, text: 'Всё отлично, спасибо!', sender: 'me', time: '14:25' },
-      ],
-      2: [
-        { id: 1, text: 'Встретимся завтра?', sender: 'them', time: '10:15' },
-        { id: 2, text: 'Да, конечно!', sender: 'me', time: '10:20' },
-      ],
+    const fetchDialogs = async () => {
+      try {
+        const token = localStorage.getItem('access_token')
+        const response = await fetch(
+          `${API_URL}/messages/dialogs/list?user_id=${currentUserId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        )
+        
+        if (response.ok) {
+          const data = await response.json()
+          setDialogs(data)
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки диалогов:', error)
+      }
     }
-    setMessages(mockMessages[dialogId] || [])
-  }
+
+    fetchDialogs()
+    // Обновляем диалоги каждые 5 секунд
+    const interval = setInterval(fetchDialogs, 5000)
+    return () => clearInterval(interval)
+  }, [currentUserId])
+
+  // Загрузка сообщений выбранного диалога
+  useEffect(() => {
+    if (!selectedDialog || !currentUserId) return
+
+    const fetchMessages = async () => {
+      try {
+        const token = localStorage.getItem('access_token')
+        const response = await fetch(
+          `${API_URL}/messages/${selectedDialog.id}?current_user_id=${currentUserId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        )
+        
+        if (response.ok) {
+          const data = await response.json()
+          setMessages(data)
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки сообщений:', error)
+      }
+    }
+
+    fetchMessages()
+    // Обновляем сообщения каждые 2 секунды
+    const interval = setInterval(fetchMessages, 2000)
+    return () => clearInterval(interval)
+  }, [selectedDialog, currentUserId])
+
+  // Автоскролл вниз при новых сообщениях
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const handleDialogClick = (dialog) => {
     setSelectedDialog(dialog)
-    loadMessages(dialog.id)
+  }
+
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !selectedDialog || !currentUserId) return
+
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('access_token')
+      const response = await fetch(
+        `${API_URL}/messages/send?sender_id=${currentUserId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            receiver_id: selectedDialog.id,
+            content: messageInput,
+            picture_url: ""
+          })
+        }
+      )
+
+      if (response.ok) {
+        const newMessage = await response.json()
+        setMessages(prev => [...prev, newMessage])
+        setMessageInput('')
+      }
+    } catch (error) {
+      console.error('Ошибка отправки сообщения:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
+    }
   }
 
   return (
@@ -55,22 +149,28 @@ function Messages() {
         <aside className="messages-sidebar">
           <h2 className="messages-title">Сообщения</h2>
           <div className="dialogs-list">
-            {dialogs.map(dialog => (
-              <div
-                key={dialog.id}
-                className={`dialog-item ${selectedDialog?.id === dialog.id ? 'active' : ''}`}
-                onClick={() => handleDialogClick(dialog)}
-              >
-                <img src={dialog.avatar} alt={dialog.name} className="dialog-avatar" />
-                <div className="dialog-info">
-                  <h3 className="dialog-name">{dialog.name}</h3>
-                  <p className="dialog-last-message">{dialog.lastMessage}</p>
-                </div>
-                {dialog.unread > 0 && (
-                  <span className="dialog-unread">{dialog.unread}</span>
-                )}
+            {dialogs.length === 0 ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+                Нет диалогов
               </div>
-            ))}
+            ) : (
+              dialogs.map(dialog => (
+                <div
+                  key={dialog.id}
+                  className={`dialog-item ${selectedDialog?.id === dialog.id ? 'active' : ''}`}
+                  onClick={() => handleDialogClick(dialog)}
+                >
+                  <img src={dialog.avatar} alt={dialog.name} className="dialog-avatar" />
+                  <div className="dialog-info">
+                    <h3 className="dialog-name">{dialog.name}</h3>
+                    <p className="dialog-last-message">{dialog.lastMessage}</p>
+                  </div>
+                  {dialog.unread > 0 && (
+                    <span className="dialog-unread">{dialog.unread}</span>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </aside>
 
@@ -83,18 +183,43 @@ function Messages() {
                 <h3 className="chat-name">{selectedDialog.name}</h3>
               </div>
               <div className="chat-messages">
-                {messages.map(msg => (
-                  <div key={msg.id} className={`message ${msg.sender}`}>
-                    <div className="message-bubble">
-                      <p className="message-text">{msg.text}</p>
-                      <span className="message-time">{msg.time}</span>
-                    </div>
+                {messages.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: '#999', marginTop: '20px' }}>
+                    Начните общение
                   </div>
-                ))}
+                ) : (
+                  messages.map((msg, index) => {
+                    const isMine = msg.sender_id === currentUserId
+                    return (
+                      <div key={index} className={`message ${isMine ? 'me' : 'them'}`}>
+                        <div className="message-bubble">
+                          <p className="message-text">{msg.content}</p>
+                          {msg.picture_url && (
+                            <img 
+                              src={msg.picture_url} 
+                              alt="attachment" 
+                              style={{ maxWidth: '200px', marginTop: '5px', borderRadius: '8px' }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+                <div ref={messagesEndRef} />
               </div>
               <div className="chat-input">
-                <input type="text" placeholder="Напишите сообщение..." />
-                <button>Отправить</button>
+                <input 
+                  type="text" 
+                  placeholder="Напишите сообщение..." 
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={loading}
+                />
+                <button onClick={handleSendMessage} disabled={loading || !messageInput.trim()}>
+                  {loading ? 'Отправка...' : 'Отправить'}
+                </button>
               </div>
             </>
           ) : (
