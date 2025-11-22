@@ -7,7 +7,8 @@ from sqlalchemy.ext.asyncio.session import async_sessionmaker, AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from fastapi.exceptions import HTTPException
-
+from fastapi import Depends, Header
+from typing import Optional
 
 from ..config import DATABASE_URL
 from .models.base import Base
@@ -442,6 +443,59 @@ async def get_user_communities(session: AsyncSession, user_id: int):
     ]
 
 
+
+async def get_current_user(
+    authorization: Optional[str] = Header(None),
+    session: AsyncSession = Depends(get_db)
+):
+    """
+    Возвращает текущего пользователя по токену в заголовке Authorization
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Invalid auth scheme")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid Authorization header")
+
+    # В этом примере токен — username пользователя
+    user = await get_by_username(session, token)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
+
+from .models.likes import Like
+
+async def toggle_like(session: AsyncSession, user_id: int, post_id: int):
+    # проверяем, есть ли уже лайк
+    stmt = select(Like).where(Like.user_id == user_id, Like.post_id == post_id)
+    result = await session.execute(stmt)
+    like = result.scalar_one_or_none()
+
+    post_stmt = select(Post).where(Post.post_id == post_id)
+    post_result = await session.execute(post_stmt)
+    post = post_result.scalar_one_or_none()
+    if not post:
+        raise ValueError("Post not found")
+
+    if like:
+        # удалить лайк
+        await session.delete(like)
+        post.likes_count -= 1
+        liked = False
+    else:
+        # добавить лайк
+        new_like = Like(user_id=user_id, post_id=post_id)
+        session.add(new_like)
+        post.likes_count += 1
+        liked = True
+
+    await session.commit()
+    return {"liked": liked}
 # Tags todo
 
 # Post Tags todo
