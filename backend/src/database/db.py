@@ -298,7 +298,7 @@ async def create_comment(session: AsyncSession, post_id: int, user_id: int, cont
     await session.flush()  # Получаем ID без commit
     comment_id = db_comment.comment_id  # Сохраняем ID до commit
     await session.commit()
-    # Возвращаем словарь вместо объекта, чтобы избежать проблем с сессией
+
     return {
         "comment_id": comment_id,
         "post_id": post_id,
@@ -307,7 +307,7 @@ async def create_comment(session: AsyncSession, post_id: int, user_id: int, cont
     }
 
 async def get_comments_by_post_id(session: AsyncSession, post_id: int):
-    stmt = select(Comment).where(Comment.post_id == post_id).order_by(Comment.comment_id)
+    stmt = select(Comment).where(Comment.post_id == post_id).order_by(desc(Comment.comment_id))
     result = await session.execute(stmt)
     rows = result.scalars().all()
     

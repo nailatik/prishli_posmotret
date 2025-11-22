@@ -65,19 +65,19 @@ function Feed() {
     }
 
     try {
-      const newComment = await makeRequest('comments', {
+      await makeRequest('comments', {
         method: 'POST',
         body: JSON.stringify({
           post_id: postId,
           content: comment.trim()
         })
       })
-      console.log('Комментарий успешно отправлен', newComment)
+      console.log('Комментарий успешно отправлен')
       
-      // Обновляем список комментариев для этого поста
+      const updatedComments = await makeRequest(`posts/${postId}/comments`)
       setCommentsByPost(prev => ({
         ...prev,
-        [postId]: [...(prev[postId] || []), newComment]
+        [postId]: updatedComments
       }))
     } catch (error) {
       console.error('Ошибка при отправке комментария:', error)
