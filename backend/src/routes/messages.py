@@ -144,3 +144,44 @@ async def get_user_dialogs(
         return dialogs
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get('/users/search')
+async def search_users(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    query: str = ""
+):
+    """Поиск пользователей для начала диалога"""
+    try:
+        from sqlalchemy import select, or_
+        from ..models.user import User  # адаптируй под свою модель
+        
+        stmt = select(User)
+        
+        if query:
+            search_pattern = f"%{query}%"
+            stmt = stmt.where(
+                or_(
+                    User.first_name.ilike(search_pattern),
+                    User.last_name.ilike(search_pattern),
+                    User.username.ilike(search_pattern)
+                )
+            )
+        
+        stmt = stmt.limit(20)  # Ограничиваем 20 результатами
+        
+        result = await session.execute(stmt)
+        users = result.scalars().all()
+        
+        return [
+            {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "username": getattr(user, 'username', None),
+                "profile_picture": getattr(user, 'profile_picture', None)
+            }
+            for user in users
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

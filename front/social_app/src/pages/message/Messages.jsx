@@ -13,6 +13,9 @@ function Messages() {
   const [messages, setMessages] = useState([])
   const [messageInput, setMessageInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showNewDialogModal, setShowNewDialogModal] = useState(false)
+  const [availableUsers, setAvailableUsers] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
   const messagesEndRef = useRef(null)
 
   // Проверка авторизации и получение ID текущего пользователя
@@ -23,9 +26,7 @@ function Messages() {
       return
     }
 
-    // Получаем ID текущего пользователя из токена или из отдельного API
-    // Предполагаю, что у тебя есть способ получить current user ID
-    const userId = localStorage.getItem('user_id') // или декодируй из JWT
+    const userId = localStorage.getItem('user_id')
     setCurrentUserId(parseInt(userId))
   }, [navigate])
 
@@ -55,7 +56,6 @@ function Messages() {
     }
 
     fetchDialogs()
-    // Обновляем диалоги каждые 5 секунд
     const interval = setInterval(fetchDialogs, 5000)
     return () => clearInterval(interval)
   }, [currentUserId])
@@ -86,7 +86,6 @@ function Messages() {
     }
 
     fetchMessages()
-    // Обновляем сообщения каждые 2 секунды
     const interval = setInterval(fetchMessages, 2000)
     return () => clearInterval(interval)
   }, [selectedDialog, currentUserId])
@@ -95,6 +94,35 @@ function Messages() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Загрузка списка пользователей для нового диалога
+  const fetchAvailableUsers = async () => {
+    try {
+      const token = localStorage.getItem('access_token')
+      const response = await fetch(
+        `${API_URL}/users/search?query=${searchQuery}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      )
+      
+      if (response.ok) {
+        const data = await response.json()
+        // Исключаем текущего пользователя
+        setAvailableUsers(data.filter(user => user.id !== currentUserId))
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки пользователей:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (showNewDialogModal) {
+      fetchAvailableUsers()
+    }
+  }, [showNewDialogModal, searchQuery])
 
   const handleDialogClick = (dialog) => {
     setSelectedDialog(dialog)
@@ -141,17 +169,46 @@ function Messages() {
     }
   }
 
+  const handleStartNewDialog = (user) => {
+    setSelectedDialog({
+      id: user.id,
+      name: `${user.first_name} ${user.last_name}`,
+      avatar: user.profile_picture || 'https://via.placeholder.com/50'
+    })
+    setMessages([])
+    setShowNewDialogModal(false)
+    setSearchQuery('')
+  }
+
   return (
     <div className="messages-page">
       <Header />
       <div className="messages-container">
         {/* Левая панель - список диалогов */}
         <aside className="messages-sidebar">
-          <h2 className="messages-title">Сообщения</h2>
+          <div className="messages-header">
+            <h2 className="messages-title">Сообщения</h2>
+            <button 
+              className="new-dialog-btn"
+              onClick={() => setShowNewDialogModal(true)}
+              title="Новый диалог"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+            </button>
+          </div>
+          
           <div className="dialogs-list">
             {dialogs.length === 0 ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-                Нет диалогов
+              <div className="no-dialogs">
+                <p>Нет диалогов</p>
+                <button 
+                  className="start-dialog-btn"
+                  onClick={() => setShowNewDialogModal(true)}
+                >
+                  Начать диалог
+                </button>
               </div>
             ) : (
               dialogs.map(dialog => (
@@ -224,11 +281,68 @@ function Messages() {
             </>
           ) : (
             <div className="no-dialog-selected">
-              <p>Выберите диалог, чтобы начать общение</p>
+              <p>Выберите диалог или начните новый</p>
+              <button 
+                className="start-dialog-btn-center"
+                onClick={() => setShowNewDialogModal(true)}
+              >
+                Начать новый диалог
+              </button>
             </div>
           )}
         </main>
       </div>
+
+      {/* Модальное окно для выбора пользователя */}
+      {showNewDialogModal && (
+        <div className="modal-overlay" onClick={() => setShowNewDialogModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Новый диалог</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowNewDialogModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <input
+                type="text"
+                placeholder="Поиск пользователей..."
+                className="user-search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              
+              <div className="users-list">
+                {availableUsers.length === 0 ? (
+                  <p className="no-users">Пользователи не найдены</p>
+                ) : (
+                  availableUsers.map(user => (
+                    <div
+                      key={user.id}
+                      className="user-item"
+                      onClick={() => handleStartNewDialog(user)}
+                    >
+                      <img 
+                        src={user.profile_picture || 'https://via.placeholder.com/50'} 
+                        alt={`${user.first_name} ${user.last_name}`}
+                        className="user-avatar"
+                      />
+                      <div className="user-info">
+                        <h4>{user.first_name} {user.last_name}</h4>
+                        {user.username && <p>@{user.username}</p>}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
