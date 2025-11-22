@@ -19,6 +19,7 @@ from .models.messages import Message
 from .models.comments import Comment
 from .models.communities import Community
 from .models.user_community import UserCommunity
+from .models.community_members import CommunityMember
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -381,6 +382,65 @@ async def get_user_communities(session: AsyncSession, user_id: int):
             })
     
     return communities
+
+
+async def add_member(session: AsyncSession, community_id: int, user_id: int):
+    member = CommunityMember(community_id=community_id, user_id=user_id)
+    session.add(member)
+    await session.commit()
+    await session.refresh(member)
+    return member
+
+async def remove_member(session: AsyncSession, community_id: int, user_id: int):
+    stmt = delete(CommunityMember).where(
+        (CommunityMember.community_id == community_id) &
+        (CommunityMember.user_id == user_id)
+    )
+    await session.execute(stmt)
+    await session.commit()
+    return True
+
+async def get_members_by_community(session: AsyncSession, community_id: int):
+    stmt = select(CommunityMember.user_id).where(CommunityMember.community_id == community_id)
+    result = await session.execute(stmt)
+    members = result.scalars().all()
+    return members  
+
+async def is_member(session: AsyncSession, community_id: int, user_id: int):
+    stmt = select(CommunityMember).where(
+        (CommunityMember.community_id == community_id) &
+        (CommunityMember.user_id == user_id)
+    )
+    result = await session.execute(stmt)
+    member = result.scalar_one_or_none()
+    return member is not None
+
+async def get_user_communities(session: AsyncSession, user_id: int):
+    
+    stmt = select(CommunityMember.community_id).where(CommunityMember.user_id == user_id)
+    result = await session.execute(stmt)
+    community_ids = result.scalars().all() 
+
+    if not community_ids:
+        return []
+
+    
+    stmt2 = select(Community).where(Community.com_id.in_(community_ids))
+    result2 = await session.execute(stmt2)
+    communities = result2.scalars().all()
+
+    return [
+        {
+            "com_id": com.com_id,
+            "name": com.name,
+            "description": com.description,
+            "creator_id": com.creator_id,
+            "avatar_url": com.avatar_url,
+            "created_at": com.created_at,
+        }
+        for com in communities
+    ]
+
 
 # Tags todo
 
