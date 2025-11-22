@@ -63,7 +63,7 @@ async def sign_up(
         # СОЗДАЕМ UserData
         user_data = UserData(
             user_id=user.user_id,
-            first_name="",
+            first_name=user.username,
             last_name="",
             birthday=datetime.now(),
             gender="Не указан",
@@ -83,11 +83,13 @@ async def sign_up(
         return {
             "id": user.user_id,
             "username": user.username,
+            "first_name": user.username
         }
         
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/seed-users")
 async def seed_users(
