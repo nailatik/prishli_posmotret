@@ -1,45 +1,25 @@
-// import './Header.css'
-
-// function Header() {
-//   return (
-//     <header className="header">
-//       <div className="header-container">        
-//         {/* Навигация */}
-//         <nav className="header-nav">
-//           <a href="/">Моя страница</a>
-//           <a href="/profile">Новости</a>
-//           <a href="/messages">Сообщения</a>
-//           <a href="/friends">Мои друзья</a>
-//           <a href="/music">Музыка</a>
-//         </nav>
-//       </div>
-//     </header>
-//   )
-// }
-
-// export default Header
-
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router'
 import './Header.css'
 
 function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userId, setUserId] = useState(null)  // состояние для ID
   const navigate = useNavigate()
 
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem('access_token')
       setIsAuthenticated(!!token)
+      // пример: userId можно хранить в localStorage после логина
+      const storedUserId = localStorage.getItem('user_id')
+      setUserId(storedUserId)
     }
     
     checkAuth()
     
-    // Проверяем при изменении localStorage (для других вкладок)
     const handleStorageChange = () => checkAuth()
     window.addEventListener('storage', handleStorageChange)
-    
-    // Проверяем при кастомном событии auth-change (для текущей вкладки)
     const handleAuthChange = () => checkAuth()
     window.addEventListener('auth-change', handleAuthChange)
     
@@ -52,7 +32,9 @@ function Header() {
   const handleLogout = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('token_type')
+    localStorage.removeItem('user_id')
     setIsAuthenticated(false)
+    setUserId(null)
     navigate('/auth')
   }
 
@@ -60,12 +42,13 @@ function Header() {
     navigate('/auth')
   }
 
+  const myProfileLink = userId ? `/profile/${userId}` : '/auth'
+
   return (
     <header className="header">
       <div className="header-container">
-        {/* Навигация */}
         <nav className="header-nav">
-          <Link to="/profile">Моя страница</Link>
+          <Link to={myProfileLink}>Моя страница</Link>
           <Link to="/">Новости</Link>
           <Link to="/messages">Сообщения</Link>
           <Link to="/friends">Мои друзья</Link>
