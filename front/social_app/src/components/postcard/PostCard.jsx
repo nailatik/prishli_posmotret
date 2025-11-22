@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import Avatar from '@mui/material/Avatar'
 import Grid from '@mui/material/Grid'
@@ -11,12 +10,14 @@ import CardMedia from '@mui/material/CardMedia'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 
 function PostCard({ 
+  postId,
   imgSrc, 
   author, 
   avatarSrc, 
   title, 
   description, 
-  onLike, 
+  initialLiked = false,
+  initialLikesCount = 0,
   onSendComment,
   ...props 
 }) {
@@ -25,8 +26,9 @@ function PostCard({
   const [imageError, setImageError] = useState(false)
   const [imageUrl, setImageUrl] = useState(imgSrc)
 
-  // Новое состояние для переключения лайка
-  const [liked, setLiked] = useState(false)
+  // Состояния лайка и количества лайков
+  const [liked, setLiked] = useState(initialLiked)
+  const [likesCount, setLikesCount] = useState(initialLikesCount)
 
   useEffect(() => {
     if (imgSrc) {
@@ -40,10 +42,35 @@ function PostCard({
     setImageError(true)
   }
 
-  // Обработчик клика по лайку с переключением состояния
-  const handleLikeClick = () => {
-    setLiked(!liked)
-    onLike && onLike(!liked) // если нужно, вызываем callback с новым состоянием
+  // Обработчик кнопки лайка с API-запросом
+  const handleLikeClick = async () => {
+    // токен, например, из localStorage
+    const token = localStorage.getItem("token");
+
+    try {
+      // Отправляем POST запрос на лайк/анлайк поста
+      const response = await fetch(`/api/posts/${postId}/like`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка при лайке");
+      }
+
+      const data = await response.json();
+
+      // Обновляем состояние лайка и счётчика
+      setLiked(data.liked);
+      setLikesCount(prev => prev + (data.liked ? 1 : -1));
+
+    } catch (err) {
+      console.error(err);
+      alert("Не удалось поставить лайк");
+    }
   }
 
   return (
@@ -59,6 +86,8 @@ function PostCard({
         minHeight: 370,
         overflow: 'hidden'
       }}
+      data-post-id={postId} // для соответствия вашему примеру
+      className="post"
     >
       {imgSrc && typeof imgSrc === 'string' && imgSrc.trim() !== '' && !imageError && (
         <CardMedia
@@ -150,55 +179,70 @@ function PostCard({
               }}
             />
             {(focused || comment) && (
+              <Button
+                color="primary"
+                variant="contained"
+                size="small"
+                sx={{
+                  minWidth: 36,
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  padding: 0,
+                  marginLeft: '8px',
+                  boxShadow: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: (focused || comment) ? 1 : 0,
+                  transition: 'opacity 0.25s'
+                }}
+                onClick={() => {
+                  onSendComment?.(comment)
+                  setComment('')
+                }}
+              >
+                <ArrowUpwardIcon />
+              </Button>
+            )}
+          </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}
+          >
             <Button
-              color="primary"
               variant="contained"
+              color={liked ? 'error' : 'warning'}
               size="small"
               sx={{
-                minWidth: 36,
                 width: 36,
                 height: 36,
+                minWidth: 36,
                 borderRadius: '50%',
+                fontWeight: 'bold',
+                fontSize: 18,
+                lineHeight: 1,
                 padding: 0,
-                marginLeft: '8px',
-                boxShadow: 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                opacity: (focused || comment) ? 1 : 0,
-                transition: 'opacity 0.25s'
+                transition: 'background-color 0.3s ease',
+                color: liked ? 'red' : 'black'
               }}
-              onClick={() => {
-                onSendComment?.(comment)
-                setComment('')
-              }}
+              onClick={handleLikeClick}
+              className="like-btn"
             >
-              <ArrowUpwardIcon />
+              {liked ? '❤️' : '❤'}
             </Button>
-            )}
+            <Typography className="likes-count" variant="caption" sx={{ mt: 0.5 }}>
+              {likesCount}
+            </Typography>
           </Box>
-          <Button
-            variant="contained"
-            color={liked ? 'error' : 'warning'} // меняем цвет кнопки в зависимости от liked
-            size="small"
-            sx={{
-              width: 36,
-              height: 36,
-              minWidth: 36,
-              borderRadius: '50%',
-              fontWeight: 'bold',
-              fontSize: 18,
-              lineHeight: 1,
-              padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background-color 0.3s ease'
-            }}
-            onClick={handleLikeClick}
-          >
-            {liked ? '❤️' : '❤'}
-          </Button>
         </Box>
       </Box>
     </Card>
