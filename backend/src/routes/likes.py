@@ -4,7 +4,7 @@ from ..database.db import get_db, get_current_user, toggle_like
 
 router = APIRouter()
 
-@router.post("/api/posts/{post_id}/like")
+@router.post("/posts/{post_id}/like")
 async def like_post(
     post_id: int,
     current_user=Depends(get_current_user),
