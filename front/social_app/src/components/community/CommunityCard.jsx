@@ -12,12 +12,15 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
   if (!community) return null
 
   const {
+    id,
     community_id,
     name,
     description,
     avatar,
     members_count  // предполагаем, что это число участников
   } = community
+  
+  const communityId = id || community_id
 
   return (
     <div className="community-page-bg">
@@ -50,7 +53,7 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
                 <Button 
                   variant="outlined" 
                   color="secondary" 
-                  onClick={() => onUnsubscribe(community_id)}
+                  onClick={() => onUnsubscribe(communityId)}
                 >
                   Отписаться
                 </Button>
@@ -58,7 +61,7 @@ function CommunityCard({ community, isSubscribed, onSubscribe, onUnsubscribe }) 
                 <Button 
                   variant="contained" 
                   color="primary" 
-                  onClick={() => onSubscribe(community_id)}
+                  onClick={() => onSubscribe(communityId)}
                 >
                   Подписаться
                 </Button>

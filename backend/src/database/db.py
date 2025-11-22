@@ -391,6 +391,32 @@ async def unsubscribe_user_from_community(session: AsyncSession, user_id: int, c
     await session.commit()
     return result.rowcount > 0
 
+async def get_all_communities(session: AsyncSession, user_id: int = None):
+    # Получаем все сообщества
+    stmt = select(Community)
+    result = await session.execute(stmt)
+    all_communities = result.scalars().all()
+    
+    # Получаем подписки пользователя, если user_id указан
+    user_subscriptions = set()
+    if user_id:
+        subscription_stmt = select(UserCommunity).where(UserCommunity.user_id == user_id)
+        subscription_result = await session.execute(subscription_stmt)
+        subscriptions = subscription_result.scalars().all()
+        user_subscriptions = {sub.community_id for sub in subscriptions}
+    
+    communities = []
+    for community in all_communities:
+        communities.append({
+            "id": community.community_id,
+            "name": community.name,
+            "description": community.description or "",
+            "avatar": community.avatar or "https://api.dicebear.com/7.x/fun/svg?seed=community",
+            "is_subscribed": community.community_id in user_subscriptions if user_id else False
+        })
+    
+    return communities
+
 async def get_user_communities(session: AsyncSession, user_id: int):
     # Получаем все подписки пользователя на сообщества
     stmt = select(UserCommunity).where(UserCommunity.user_id == user_id)

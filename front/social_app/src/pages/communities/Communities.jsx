@@ -16,19 +16,31 @@ function Communities() {
 
   const loaderRef = useRef(null)
 
-  useEffect(() => {
-    const fetchCommunities = async () => {
-      try {
-        setLoading(true)
-        const data = await makeRequest('user/me/communities')
-        setAllCommunities(data)
-      } catch (err) {
-        setError(err.message || 'Ошибка загрузки сообществ')
-      } finally {
-        setLoading(false)
-      }
+  const fetchCommunities = async () => {
+    try {
+      setLoading(true)
+      const data = await makeRequest('communities')
+      setAllCommunities(data)
+    } catch (err) {
+      setError(err.message || 'Ошибка загрузки сообществ')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchCommunities()
+    
+    // Слушаем событие обновления авторизации
+    const handleAuthChange = () => {
+      fetchCommunities()
+    }
+    window.addEventListener('auth-change', handleAuthChange)
+    
+    return () => {
+      window.removeEventListener('auth-change', handleAuthChange)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const filtered = allCommunities.filter(c =>
@@ -78,7 +90,7 @@ function Communities() {
     <div className="communities-page">
       <Header />
       <main className="communities-content">
-        <h1 className="communities-title">Мои сообщества</h1>
+        <h1 className="communities-title">Сообщества</h1>
         <div className="communities-search-wrap">
           <input
             className="communities-search"
