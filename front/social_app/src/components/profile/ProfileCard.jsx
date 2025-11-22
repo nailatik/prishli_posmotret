@@ -62,7 +62,7 @@ import {
 } from '@mui/material'
 import './ProfileCard.css'
 
-function ProfileCard({ profile }) {
+function ProfileCard({ profile, isOwnProfile = false, isFriend = false, onAddFriend, onRemoveFriend }) {
   if (!profile) return null
 
   const {
@@ -70,11 +70,21 @@ function ProfileCard({ profile }) {
     last_name,
     avatar,
     bio,
+    username,
     is_own_profile,
     posts
   } = profile
 
-  const fullName = `${first_name || ''} ${last_name || ''}`.trim() || 'Без имени'
+  // Используем переданный prop или значение из данных
+  const ownProfile = isOwnProfile || is_own_profile || false
+  
+  // Для своего профиля показываем только username (ник), для других - имя и фамилию
+  const displayName = ownProfile && username 
+    ? username 
+    : `${first_name || ''} ${last_name || ''}`.trim() || 'Без имени'
+  
+  // Для своего профиля не показываем bio (описание), только username
+  const showBio = !ownProfile
 
   return (
     <div className="profile-page-bg">
@@ -83,7 +93,7 @@ function ProfileCard({ profile }) {
         <Grid item>
           <Avatar
             src={avatar || 'https://via.placeholder.com/150'}
-            alt={fullName}
+            alt={displayName}
             className="profile-main-avatar"
           />
         </Grid>
@@ -92,22 +102,36 @@ function ProfileCard({ profile }) {
         <Grid item xs>
           <div className="profile-info-block">
             <Typography variant="h5" className="profile-title">
-              {fullName}
+              {displayName}
             </Typography>
-            <Typography variant="body1" className="profile-bio">
-              {bio || 'Описание отсутствует'}
-            </Typography>
+            {showBio && (
+              <Typography variant="body1" className="profile-bio">
+                {bio || 'Описание отсутствует'}
+              </Typography>
+            )}
 
             {/* Кнопки в зависимости от того чей профиль */}
-            {is_own_profile ? (
-              <Button variant="contained" color="primary">
-                Редактировать профиль
-              </Button>
-            ) : (
+            {!ownProfile && (
               <Box sx={{ mt: 2 }}>
-                <Button variant="outlined" color="primary" sx={{ mr: 1 }}>
-                  Добавить в друзья
-                </Button>
+                {isFriend ? (
+                  <Button 
+                    variant="outlined" 
+                    color="secondary" 
+                    sx={{ mr: 1 }}
+                    onClick={onRemoveFriend}
+                  >
+                    Удалить из друзей
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outlined" 
+                    color="primary" 
+                    sx={{ mr: 1 }}
+                    onClick={onAddFriend}
+                  >
+                    Добавить в друзья
+                  </Button>
+                )}
                 <Button variant="outlined" color="secondary">
                   Написать сообщение
                 </Button>

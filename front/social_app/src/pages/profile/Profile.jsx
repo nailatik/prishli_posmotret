@@ -4,13 +4,12 @@ import Header from '../../components/header/Header'
 import ProfileCard from '../../components/profile/ProfileCard'
 import './profile.css'
 
-export default function Profile() {
+export default function Profile({ userId, isOwnProfile = true }) {
   const [profileData, setProfileData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
-
-  const currentUserId = 1
+  const [currentUserId, setCurrentUserId] = useState(() => userId || localStorage.getItem('user_id') || '1')
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -19,24 +18,41 @@ export default function Profile() {
     }
   }, [navigate])  
 
+  const fetchProfile = async (userId) => {
+    try {
+      setLoading(true)
+      const response = await fetch(`http://localhost:8000/api/profile/${userId}`)
+      if (!response.ok) {
+        throw new Error('Ошибка загрузки профиля')
+      }
+      const data = await response.json()
+      setProfileData(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`http://localhost:8000/api/profile/${currentUserId}`)
-        if (!response.ok) {
-          throw new Error('Ошибка загрузки профиля')
-        }
-        const data = await response.json()
-        setProfileData(data)
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
+    const userIdToUse = userId || localStorage.getItem('user_id') || '1'
+    setCurrentUserId(userIdToUse)
+    fetchProfile(userIdToUse)
+    
+    // Слушаем событие обновления авторизации
+    const handleAuthChange = () => {
+      const storedUserId = userId || localStorage.getItem('user_id')
+      if (storedUserId) {
+        setCurrentUserId(storedUserId)
+        fetchProfile(storedUserId)
       }
     }
-    fetchProfile()
-  }, [currentUserId])
+    window.addEventListener('auth-change', handleAuthChange)
+    
+    return () => {
+      window.removeEventListener('auth-change', handleAuthChange)
+    }
+  }, [userId])
 
   if (loading) return <div>Загрузка...</div>
   if (error) return <div>Ошибка: {error}</div>
@@ -45,7 +61,7 @@ export default function Profile() {
     <div>
       <Header />
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <ProfileCard profile={profileData} />
+        <ProfileCard profile={profileData} isOwnProfile={isOwnProfile} />
       </div>
     </div>
   )

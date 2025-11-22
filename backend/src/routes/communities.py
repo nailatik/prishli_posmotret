@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from ..database.db import (
     get_db,
     get_user_communities,
+    get_all_communities,
     get_by_username,
     create_community,
     subscribe_user_to_community,
@@ -19,6 +20,26 @@ from ..dependencies import get_current_user, get_current_user_optional
 
 
 router = APIRouter()
+
+
+@router.get('/communities')
+async def get_all_communities_route(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[dict | None, Depends(get_current_user_optional)] = None
+):
+    try:
+        user_id = None
+        if user:
+            db_user = await get_by_username(session, user["username"])
+            if db_user:
+                user_id = db_user.user_id
+        
+        communities = await get_all_communities(session, user_id)
+        return communities
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get('/communities/{community_id}')
