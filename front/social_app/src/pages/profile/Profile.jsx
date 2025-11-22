@@ -12,6 +12,8 @@ export default function Profile({ userId, isOwnProfile = true }) {
   const [error, setError] = useState(null)
   const navigate = useNavigate()
   const [currentUserId, setCurrentUserId] = useState(() => userId || localStorage.getItem('user_id') || '1')
+  const [isFriend, setIsFriend] = useState(false);
+
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -56,13 +58,45 @@ export default function Profile({ userId, isOwnProfile = true }) {
   if (loading) return <div>Загрузка...</div>
   if (error) return <div>Ошибка: {error}</div>
 
+  const onAddFriend = async () => {
+    try {
+      const response = await makeRequest(`profile/${currentUserId}/add-friend`, {
+        method: 'POST',
+      });
+      if (response.is_friend) {
+        setIsFriend(true);
+      }
+    } catch (err) {
+      console.error('Ошибка добавления в друзья:', err);
+    }
+  };
+
+  const onRemoveFriend = async () => {
+    try {
+      const response = await makeRequest(`profile/${currentUserId}/remove-friend`, {
+        method: 'POST',
+      });
+      if (response.is_friend === false) {
+        setIsFriend(false);
+      }
+    } catch (err) {
+      console.error('Ошибка удаления из друзей:', err);
+    }
+  };
+
   return (
     <div>
       <Header />
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <ProfileCard profile={profileData} isOwnProfile={isOwnProfile} />
+        <ProfileCard
+          profile={profileData}
+          isOwnProfile={isOwnProfile}
+          isFriend={isFriend}
+          onAddFriend={onAddFriend}
+          onRemoveFriend={onRemoveFriend}
+        />
       </div>
     </div>
-  )
+  );
 }
 
