@@ -1,22 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import Header from '../../components/header/Header'
-import Sidebar from '../../components/sidebar/Sidebar'
-import FeedList from '../../components/FeedList'
 import './Messages.css'
+
+const API_URL = 'http://localhost:8000/api'
 
 function Messages() {
   const navigate = useNavigate()
 
   // Состояния
-  const [dialogs, setDialogs] = useState([
-    { id: 1, name: 'Имя Фамилия', avatar: 'https://i.pravatar.cc/150?img=1', lastMessage: 'Привет, как дела?', unread: 2 },
-    { id: 2, name: 'Анна Смирнова', avatar: 'https://i.pravatar.cc/150?img=2', lastMessage: 'Увидимся завтра!', unread: 0 },
-    { id: 3, name: 'Петр Иванов', avatar: 'https://i.pravatar.cc/150?img=3', lastMessage: 'Спасибо за помощь', unread: 1 },
-    { id: 4, name: 'Мария Козлова', avatar: 'https://i.pravatar.cc/150?img=4', lastMessage: 'Отправил файлы', unread: 0 },
-    { id: 5, name: 'Сергей Попов', avatar: 'https://i.pravatar.cc/150?img=5', lastMessage: 'Когда встретимся?', unread: 0 },
-  ])
-
+  const [dialogs, setDialogs] = useState([])
   const [selectedDialog, setSelectedDialog] = useState(null)
   const [messages, setMessages] = useState([])
   const [inputMessage, setInputMessage] = useState('')
@@ -27,44 +20,101 @@ function Messages() {
     if (!token) navigate('/auth')
   }, [navigate])
 
-  // Заглушка загрузки сообщений (замените на реальный запрос)
-  const loadMessages = (dialogId) => {
-    // TODO: Заменить на запрос к API
-    const mockMessages = {
-      1: [
-        { id: 1, text: 'Привет!', sender: 'me', time: '14:20' },
-        { id: 2, text: 'Привет, как дела?', sender: 'them', time: '14:22' },
-        { id: 3, text: 'Всё отлично, спасибо!', sender: 'me', time: '14:25' },
-      ],
-      2: [
-        { id: 1, text: 'Встретимся завтра?', sender: 'them', time: '10:15' },
-        { id: 2, text: 'Да, конечно!', sender: 'me', time: '10:20' },
-      ],
+  // Загрузка диалогов при монтировании
+  useEffect(() => {
+    loadDialogs()
+    // Обновляем диалоги каждые 5 секунд
+    const interval = setInterval(loadDialogs, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Загрузка сообщений при выборе диалога
+  useEffect(() => {
+    if (selectedDialog) {
+      loadMessages(selectedDialog.id)
+      // Обновляем сообщения каждые 2 секунды
+      const interval = setInterval(() => loadMessages(selectedDialog.id), 2000)
+      return () => clearInterval(interval)
     }
-    setMessages(mockMessages[dialogId] || [])
+  }, [selectedDialog])
+
+  // Загрузка списка диалогов
+  const loadDialogs = async () => {
+    try {
+      const token = localStorage.getItem('access_token')
+      const response = await fetch(`${API_URL}/messages/dialogs`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setDialogs(data)
+      } else {
+        console.error('Ошибка загрузки диалогов:', response.status)
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки диалогов:', error)
+    }
+  }
+
+  // Загрузка сообщений конкретного диалога
+  const loadMessages = async (dialogId) => {
+    try {
+      const token = localStorage.getItem('access_token')
+      const response = await fetch(`${API_URL}/messages/${dialogId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(data)
+      } else {
+        console.error('Ошибка загрузки сообщений:', response.status)
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки сообщений:', error)
+    }
   }
 
   const handleDialogClick = (dialog) => {
     setSelectedDialog(dialog)
-    loadMessages(dialog.id)
   }
 
   // Отправка сообщения
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!inputMessage.trim() || !selectedDialog) return
 
-    // Добавляем сообщение локально (с id и временем)
-    const newMessage = {
-      id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-      text: inputMessage,
-      sender: 'me',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    }
-    setMessages([...messages, newMessage])
-    setInputMessage('')
+    try {
+      const token = localStorage.getItem('access_token')
+      const response = await fetch(`${API_URL}/messages/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          receiver_id: selectedDialog.id,
+          text: inputMessage
+        })
+      })
 
-    // TODO: Отправить на сервер, например:
-    // await api.sendMessage(selectedDialog.id, inputMessage)
+      if (response.ok) {
+        const newMessage = await response.json()
+        setMessages([...messages, newMessage])
+        setInputMessage('')
+        
+        // Обновляем список диалогов
+        loadDialogs()
+      } else {
+        console.error('Ошибка отправки сообщения:', response.status)
+      }
+    } catch (error) {
+      console.error('Ошибка отправки сообщения:', error)
+    }
   }
 
   // Отправка по Enter
@@ -83,22 +133,28 @@ function Messages() {
         <aside className="messages-sidebar">
           <h2 className="messages-title">Сообщения</h2>
           <div className="dialogs-list">
-            {dialogs.map(dialog => (
-              <div
-                key={dialog.id}
-                className={`dialog-item ${selectedDialog?.id === dialog.id ? 'active' : ''}`}
-                onClick={() => handleDialogClick(dialog)}
-              >
-                <img src={dialog.avatar} alt={dialog.name} className="dialog-avatar" />
-                <div className="dialog-info">
-                  <h3 className="dialog-name">{dialog.name}</h3>
-                  <p className="dialog-last-message">{dialog.lastMessage}</p>
-                </div>
-                {dialog.unread > 0 && (
-                  <span className="dialog-unread">{dialog.unread}</span>
-                )}
+            {dialogs.length === 0 ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+                Нет диалогов
               </div>
-            ))}
+            ) : (
+              dialogs.map(dialog => (
+                <div
+                  key={dialog.id}
+                  className={`dialog-item ${selectedDialog?.id === dialog.id ? 'active' : ''}`}
+                  onClick={() => handleDialogClick(dialog)}
+                >
+                  <img src={dialog.avatar} alt={dialog.name} className="dialog-avatar" />
+                  <div className="dialog-info">
+                    <h3 className="dialog-name">{dialog.name}</h3>
+                    <p className="dialog-last-message">{dialog.lastMessage}</p>
+                  </div>
+                  {dialog.unread > 0 && (
+                    <span className="dialog-unread">{dialog.unread}</span>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </aside>
 
@@ -130,11 +186,6 @@ function Messages() {
                 />
                 <button onClick={sendMessage}>Отправить</button>
               </div>
-              {/* <div className="chat-input">
-                <input type="text" placeholder="Напишите сообщение..." />
-                <button>Отправить</button>
-              </div> */}
-
             </>
           ) : (
             <div className="no-dialog-selected">
