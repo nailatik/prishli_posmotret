@@ -11,7 +11,10 @@ from ..database.db import (
     get_all_posts,
     create_post as create_post_db,
     create_user,
-    authenticate_user
+    authenticate_user,
+    get_by_username,
+    create_comment,
+    get_comments_by_post_id
 )
 
 from ..utils import create_access_token
@@ -25,6 +28,11 @@ router = APIRouter()
 class SignUpRequest(BaseModel):
     username: str
     password: str
+
+
+class CreateCommentRequest(BaseModel):
+    post_id: int
+    content: str
 
 
 @router.post('/sign-up')
@@ -174,5 +182,58 @@ async def seed_posts(
             "message": f"Успешно создано {len(created_posts)} постов",
             "posts": created_posts
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post('/comments')
+async def create_comment_route(
+    comment_data: CreateCommentRequest,
+    user: Annotated[get_current_user, Depends()],
+    session: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        # Получаем user_id из username
+        db_user = await get_by_username(session, user["username"])
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Сохраняем данные пользователя до создания комментария
+        user_id = db_user.user_id
+        username = db_user.username
+        
+        # Создаем комментарий
+        comment = await create_comment(
+            session=session,
+            post_id=comment_data.post_id,
+            user_id=user_id,
+            content=comment_data.content
+        )
+        
+        # Получаем информацию об авторе для ответа
+        return {
+            "comment_id": comment["comment_id"],
+            "post_id": comment["post_id"],
+            "author": {
+                "user_id": user_id,
+                "username": username
+            },
+            "content": comment["content"],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get('/posts/{post_id}/comments')
+async def get_comments(
+    post_id: int,
+    user: Annotated[get_current_user, Depends()],
+    session: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        comments = await get_comments_by_post_id(session, post_id)
+        return comments
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

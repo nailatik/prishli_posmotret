@@ -16,6 +16,7 @@ function PostCard({
   avatarSrc, 
   title, 
   description, 
+  comments = [],
   onLike, 
   onSendComment,
   ...props 
@@ -99,6 +100,30 @@ function PostCard({
             <Typography variant="body1" sx={{ mb: 2 }}>
               {description}
             </Typography>
+          )}
+          {/* Список комментариев */}
+          {comments && comments.length > 0 && (
+            <Box sx={{ mt: 2, mb: 2, maxHeight: 200, overflowY: 'auto' }}>
+              {comments.map((comment) => (
+                <Box 
+                  key={comment.comment_id} 
+                  sx={{ 
+                    mb: 1.5, 
+                    p: 1.5, 
+                    backgroundColor: '#f5f5f5', 
+                    borderRadius: 2,
+                    borderLeft: '3px solid #aeaffc'
+                  }}
+                >
+                  <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 0.5 }}>
+                    {comment.author?.username || 'Unknown'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {comment.content}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
           )}
         </Box>
         {/* Комментарии и лайк */}

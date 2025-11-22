@@ -1,6 +1,6 @@
 import PostCard from './postcard/PostCard'
 
-function FeedList({ posts, onLike, onSendComment }) {
+function FeedList({ posts, commentsByPost, onLike, onSendComment }) {
   return (
     <>
       {posts.map(post => {
@@ -18,6 +18,7 @@ function FeedList({ posts, onLike, onSendComment }) {
             title={post.title}
             description={post.description}
             likesCount={post.likes_count}
+            comments={commentsByPost[post.post_id] || []}
             onLike={() => onLike?.(post.post_id)}
             onSendComment={comment => onSendComment?.(post.post_id, comment)}
           />

@@ -16,6 +16,7 @@ from .models.user import User
 from .models.friendship import Friendship
 from .models.user_data import UserData
 from .models.messages import Message
+from .models.comments import Comment
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -55,9 +56,9 @@ async def authenticate_user(session: AsyncSession, username: str, password: str)
     return user 
 
 async def get_by_username(session: AsyncSession, username: str):
-    stmt = select(User).filter_by(username=username)
+    stmt = select(User).where(User.username == username)
     result = await session.execute(stmt)
-    user = result.scalars().first()
+    user = result.scalar_one_or_none()
 
     return user
 
@@ -286,6 +287,42 @@ async def delete_message(session: AsyncSession, message_id: int):
     await session.execute(stmt)
     await session.commit()
     return True
+
+# Comments
+
+async def create_comment(session: AsyncSession, post_id: int, user_id: int, content: str):
+    db_comment = Comment(post_id=post_id, user_id=user_id, content=content)
+    session.add(db_comment)
+    await session.flush()  # Получаем ID без commit
+    comment_id = db_comment.comment_id  # Сохраняем ID до commit
+    await session.commit()
+    # Возвращаем словарь вместо объекта, чтобы избежать проблем с сессией
+    return {
+        "comment_id": comment_id,
+        "post_id": post_id,
+        "user_id": user_id,
+        "content": content
+    }
+
+async def get_comments_by_post_id(session: AsyncSession, post_id: int):
+    stmt = select(Comment).where(Comment.post_id == post_id).order_by(Comment.comment_id)
+    result = await session.execute(stmt)
+    rows = result.scalars().all()
+    
+    comments = []
+    for row in rows:
+        user = await get_user_by_id(session, row.user_id)
+        comments.append({
+            "comment_id": row.comment_id,
+            "post_id": row.post_id,
+            "author": {
+                "user_id": user.user_id if user else None,
+                "username": user.username if user else "Unknown"
+            },
+            "content": row.content,
+        })
+    
+    return comments
 
 # Tags todo
 
