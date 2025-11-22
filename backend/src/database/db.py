@@ -17,6 +17,8 @@ from .models.friendship import Friendship
 from .models.user_data import UserData
 from .models.messages import Message
 from .models.community import Community
+from .models.tags import Tag
+from .models.post_tags import PostTag
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -128,10 +130,11 @@ async def get_user_by_id(session: AsyncSession, id):
 
     return user
 
-async def create_post(session: AsyncSession, user_id: int | None, community_id: int | None, content: str, picture: str): 
+async def create_post(session: AsyncSession, user_id: int | None, community_id: int | None, content: str, title: str, picture: str = None): 
     db_post = Post(
         user_id=user_id,
         community_id=community_id,
+        title=title,
         content=content,
         picture=picture
     )
@@ -372,3 +375,46 @@ async def get_community_by_id(session: AsyncSession, com_id: int):
     community = result.scalar_one_or_none()
 
     return community
+
+
+async def create_tag(session: AsyncSession, name: str):
+    db_tag = Tag(name=name)
+    session.add(db_tag)
+    await session.commit()
+    await session.refresh(db_tag)
+
+    return db_tag
+
+async def delete_tag(session: AsyncSession, tag_id: int):
+    stmt = delete(Tag).where(Tag.tag_id == tag_id)
+    await session.execute(stmt)
+    await session.commit()
+    return True
+
+async def add_tag_to_post(session: AsyncSession, post_id: int, tag_id: int):
+    db_post_tag = PostTag(post_id=post_id, tag_id=tag_id)
+    session.add(db_post_tag)
+    await session.commit()
+    await session.refresh(db_post_tag)
+
+    return db_post_tag
+
+async def delete_tag(session: AsyncSession, tag_id: int, post_id: int):
+    stmt = delete(PostTag).where((PostTag.tag_id == tag_id) & (PostTag.post_id == post_id))
+    await session.execute(stmt)
+    await session.commit()
+    return True
+
+async def get_tags_by_id(session: AsyncSession, post_id: int):
+    stmt = select(PostTag.tag_id).where(PostTag.post_id == post_id)
+    result = await session.execute(stmt)
+    tags = result.scalars().all() 
+    return tags
+
+
+async def get_all_posts_id_with_tag(session: AsyncSession, tag_id: int):
+    stmt = select(PostTag.post_id).where(PostTag.tag_id == tag_id)
+    result = await session.execute(stmt)
+    post_ids = result.scalars().all() 
+
+    return post_ids
