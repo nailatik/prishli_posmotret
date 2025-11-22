@@ -53,16 +53,16 @@
 
 .header-auth-btn:hover {
   background: white;
-  color: #8E8FFA;
+  color: #9a9a9a;
 }
 
 .header-logout-btn {
-  border-color: #ff6b6b;
-  color: #ff6b6b;
+  border-color: #ffffff;
+  color: #ffffff;
 }
 
 .header-logout-btn:hover {
-  background: #ff6b6b;
+  background: #ffaeae;
   color: white;
 }
 

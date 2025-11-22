@@ -1,56 +1,3 @@
-// import React from 'react';
-// import {
-//   Avatar,
-//   Typography,
-//   Button,
-//   Box,
-//   Grid,
-//   Paper
-// } from '@mui/material';
-// import './ProfileCard.css';
-
-// function ProfileCard() {
-//   return (
-//     <div className="profile-page-bg">
-//       <Grid container spacing={3} alignItems="flex-start" className="profile-main-row">
-//         {/* Левая часть — фото */}
-//         <Grid item>
-//           <Avatar
-//             src="photo_url.jpg"
-//             alt="Тайлер Дерден"
-//             className="profile-main-avatar"
-//           />
-//         </Grid>
-
-//         {/* Правая часть — информация */}
-//         <Grid item xs>
-//           <div className="profile-info-block">
-//             <Typography variant="h5" className="profile-title">
-//               Тайлер Дерден
-//             </Typography>
-//             <div className="profile-line">
-//               <span className="profile-label">Друзья</span>
-//               <span className="profile-value">1000</span>
-//             </div>
-//             <div className="profile-line">
-//               <span className="profile-label">Университет</span>
-//               <span className="profile-value">
-//                 Самый лучший вуз мира – СГУ им.Чернышевского
-//               </span>
-//             </div>
-//           </div>
-           
-//         </Grid>
-//       </Grid>
-        
-//       </div>
-      
-//     </div>
-//   );
-// }
-
-// export default ProfileCard;
-
 import React from 'react'
 import {
   Avatar,
@@ -87,9 +34,6 @@ function ProfileCard({ profile, isOwnProfile = false, isFriend = false, onAddFri
     : (first_name || last_name 
         ? `${first_name || ''} ${last_name || ''}`.trim() 
         : username || 'Без имени')
-  
-  // Для своего профиля не показываем bio (описание), только username
-  const showBio = !ownProfile
 
   return (
     <div className="profile-page-bg">
@@ -109,11 +53,10 @@ function ProfileCard({ profile, isOwnProfile = false, isFriend = false, onAddFri
             <Typography variant="h5" className="profile-title">
               {displayName}
             </Typography>
-            {showBio && (
+
               <Typography variant="body1" className="profile-bio">
                 {bio || 'Описание отсутствует'}
               </Typography>
-            )}
 
             {/* Кнопки в зависимости от того чей профиль */}
             {!ownProfile && (
@@ -140,6 +83,18 @@ function ProfileCard({ profile, isOwnProfile = false, isFriend = false, onAddFri
                 <Button variant="outlined" color="secondary">
                   Написать сообщение
                 </Button>
+              </Box>
+            )}
+            {ownProfile && (
+              <Box sx={{ mt: 2 }}>
+                  <Button 
+                    variant="outlined" 
+                    color="primary" 
+                    sx={{ mr: 1 }}
+                    onClick={onRemoveFriend}
+                  >
+                    Редактировать профиль
+                    </Button>
               </Box>
             )}
           </div>
