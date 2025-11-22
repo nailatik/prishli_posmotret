@@ -361,6 +361,38 @@ async def subscribe_user_to_community(session: AsyncSession, user_id: int, commu
     await session.refresh(db_subscription)
     return db_subscription
 
+async def get_community_by_id(session: AsyncSession, community_id: int):
+    stmt = select(Community).where(Community.community_id == community_id)
+    result = await session.execute(stmt)
+    community = result.scalar_one_or_none()
+    
+    if not community:
+        return None
+    
+    return {
+        "id": community.community_id,
+        "name": community.name,
+        "description": community.description or "",
+        "avatar": community.avatar or "https://api.dicebear.com/7.x/fun/svg?seed=community"
+    }
+
+async def is_user_subscribed(session: AsyncSession, user_id: int, community_id: int):
+    stmt = select(UserCommunity).where(
+        UserCommunity.user_id == user_id,
+        UserCommunity.community_id == community_id
+    )
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none() is not None
+
+async def unsubscribe_user_from_community(session: AsyncSession, user_id: int, community_id: int):
+    stmt = delete(UserCommunity).where(
+        UserCommunity.user_id == user_id,
+        UserCommunity.community_id == community_id
+    )
+    result = await session.execute(stmt)
+    await session.commit()
+    return result.rowcount > 0
+
 async def get_user_communities(session: AsyncSession, user_id: int):
     # Получаем все подписки пользователя на сообщества
     stmt = select(UserCommunity).where(UserCommunity.user_id == user_id)
