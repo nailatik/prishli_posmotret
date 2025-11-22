@@ -9,13 +9,104 @@ from ..database.db import (
     get_user_communities,
     get_by_username,
     create_community,
-    subscribe_user_to_community
+    subscribe_user_to_community,
+    get_community_by_id,
+    is_user_subscribed,
+    unsubscribe_user_from_community
 )
 
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, get_current_user_optional
 
 
 router = APIRouter()
+
+
+@router.get('/communities/{community_id}')
+async def get_community(
+    community_id: int,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[dict | None, Depends(get_current_user_optional)] = None
+):
+    try:
+        # Получаем сообщество по ID
+        community = await get_community_by_id(session, community_id)
+        if not community:
+            raise HTTPException(status_code=404, detail="Community not found")
+        
+        # Если пользователь авторизован, проверяем подписку
+        is_subscribed = False
+        if user:
+            try:
+                db_user = await get_by_username(session, user["username"])
+                if db_user:
+                    is_subscribed = await is_user_subscribed(session, db_user.user_id, community_id)
+            except:
+                pass  # Если ошибка при проверке подписки, просто оставляем False
+        
+        community["is_subscribed"] = is_subscribed
+        return community
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post('/communities/{community_id}/subscribe')
+async def subscribe_to_community(
+    community_id: int,
+    user: Annotated[get_current_user, Depends()],
+    session: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        # Получаем user_id из username
+        db_user = await get_by_username(session, user["username"])
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Проверяем, существует ли сообщество
+        community = await get_community_by_id(session, community_id)
+        if not community:
+            raise HTTPException(status_code=404, detail="Community not found")
+        
+        # Подписываем пользователя
+        subscription = await subscribe_user_to_community(session, db_user.user_id, community_id)
+        if subscription is None:
+            return {"message": "Already subscribed", "is_subscribed": True}
+        
+        return {"message": "Successfully subscribed", "is_subscribed": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post('/communities/{community_id}/unsubscribe')
+async def unsubscribe_from_community(
+    community_id: int,
+    user: Annotated[get_current_user, Depends()],
+    session: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        # Получаем user_id из username
+        db_user = await get_by_username(session, user["username"])
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Проверяем, существует ли сообщество
+        community = await get_community_by_id(session, community_id)
+        if not community:
+            raise HTTPException(status_code=404, detail="Community not found")
+        
+        # Отписываем пользователя
+        success = await unsubscribe_user_from_community(session, db_user.user_id, community_id)
+        if not success:
+            return {"message": "Not subscribed", "is_subscribed": False}
+        
+        return {"message": "Successfully unsubscribed", "is_subscribed": False}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get('/user/me/communities')
