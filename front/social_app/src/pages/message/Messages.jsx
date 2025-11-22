@@ -8,26 +8,28 @@ import './Messages.css'
 function Messages() {
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) {
-      navigate('/auth')
-    }
-  }, [navigate])
-  // Заглушка для списка диалогов
-  const [dialogs] = useState([
-    { id: 1, name: 'Имя Фамилия', avatar: 'https://randomuser.me/api/portraits/men/1.jpg', lastMessage: 'Привет, как дела?', unread: 2 },
-    { id: 2, name: 'Анна Смирнова', avatar: 'https://randomuser.me/api/portraits/women/2.jpg', lastMessage: 'Увидимся завтра!', unread: 0 },
-    { id: 3, name: 'Петр Иванов', avatar: 'https://randomuser.me/api/portraits/men/3.jpg', lastMessage: 'Спасибо за помощь', unread: 1 },
-    { id: 4, name: 'Мария Козлова', avatar: 'https://randomuser.me/api/portraits/women/4.jpg', lastMessage: 'Отправил файлы', unread: 0 },
-    { id: 5, name: 'Сергей Попов', avatar: 'https://randomuser.me/api/portraits/men/5.jpg', lastMessage: 'Когда встретимся?', unread: 0 },
+  // Состояния
+  const [dialogs, setDialogs] = useState([
+    { id: 1, name: 'Имя Фамилия', avatar: 'https://i.pravatar.cc/150?img=1', lastMessage: 'Привет, как дела?', unread: 2 },
+    { id: 2, name: 'Анна Смирнова', avatar: 'https://i.pravatar.cc/150?img=2', lastMessage: 'Увидимся завтра!', unread: 0 },
+    { id: 3, name: 'Петр Иванов', avatar: 'https://i.pravatar.cc/150?img=3', lastMessage: 'Спасибо за помощь', unread: 1 },
+    { id: 4, name: 'Мария Козлова', avatar: 'https://i.pravatar.cc/150?img=4', lastMessage: 'Отправил файлы', unread: 0 },
+    { id: 5, name: 'Сергей Попов', avatar: 'https://i.pravatar.cc/150?img=5', lastMessage: 'Когда встретимся?', unread: 0 },
   ])
 
   const [selectedDialog, setSelectedDialog] = useState(null)
   const [messages, setMessages] = useState([])
+  const [inputMessage, setInputMessage] = useState('')
 
-  // Заглушка сообщений для выбранного диалога
+  // Проверка авторизации
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) navigate('/auth')
+  }, [navigate])
+
+  // Заглушка загрузки сообщений (замените на реальный запрос)
   const loadMessages = (dialogId) => {
+    // TODO: Заменить на запрос к API
     const mockMessages = {
       1: [
         { id: 1, text: 'Привет!', sender: 'me', time: '14:20' },
@@ -45,6 +47,32 @@ function Messages() {
   const handleDialogClick = (dialog) => {
     setSelectedDialog(dialog)
     loadMessages(dialog.id)
+  }
+
+  // Отправка сообщения
+  const sendMessage = () => {
+    if (!inputMessage.trim() || !selectedDialog) return
+
+    // Добавляем сообщение локально (с id и временем)
+    const newMessage = {
+      id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+      text: inputMessage,
+      sender: 'me',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+    setMessages([...messages, newMessage])
+    setInputMessage('')
+
+    // TODO: Отправить на сервер, например:
+    // await api.sendMessage(selectedDialog.id, inputMessage)
+  }
+
+  // Отправка по Enter
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
   }
 
   return (
@@ -93,9 +121,20 @@ function Messages() {
                 ))}
               </div>
               <div className="chat-input">
+                <textarea
+                  value={inputMessage}
+                  onChange={e => setInputMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Напишите сообщение..."
+                  rows={2}
+                />
+                <button onClick={sendMessage}>Отправить</button>
+              </div>
+              {/* <div className="chat-input">
                 <input type="text" placeholder="Напишите сообщение..." />
                 <button>Отправить</button>
-              </div>
+              </div> */}
+
             </>
           ) : (
             <div className="no-dialog-selected">

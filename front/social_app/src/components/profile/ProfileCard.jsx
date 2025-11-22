@@ -161,80 +161,49 @@ function ProfileCard({ profile, isOwnProfile = false, isFriend = false, onAddFri
         </Box>
       )}
 
-      {/* Здесь можно добавить блок "Возможно знакомы" или другой контент */}
-            {/* Блок "Возможно знакомы" */}
-            <div className="profile-acquaintances-block">
-        <Typography className="profile-acquaintances-title">
-          возможно знакомы
+      {/* Блок "Возможно знакомы" */}
+<div className="profile-acquaintances-block">
+  <Typography className="profile-acquaintances-title">
+    Возможно знакомы:
+  </Typography>
+  <div className="profile-acquaintances-list">
+  {[
+      { name: 'Анастасия Петрова', id: 3 },
+      { name: 'Иван Смирнов', id: 7 },
+      { name: 'Екатерина Лебедева', id: 15 },
+      { name: 'Дмитрий Кузнецов', id: 22 },
+      { name: 'Ольга Васильева', id: 27 },
+      { name: 'Сергей Новиков', id: 31 },
+      { name: 'Марина Морозова', id: 37 },
+      { name: 'Алексей Фролов', id: 41 },
+      { name: 'Виктория Соколова', id: 43 },
+      { name: 'Николай Орлов', id: 47 },
+      { name: 'Людмила Козлова', id: 49 },
+      { name: 'Максим Беляев', id: 52 },
+      { name: 'Елена Гусева', id: 55 },
+      { name: 'Павел Дмитриев', id: 59 },
+      { name: 'Юлия Тихомирова', id: 62 },
+    ].map(({ name, id }, index) => (
+      <Paper elevation={0} className="profile-acquaintance-card" key={index}>
+        <Avatar
+          src={`https://i.pravatar.cc/150?img=${id}`}
+          alt={name}
+          className="profile-acquaintance-avatar"
+        />
+        <Typography className="profile-acquaintance-name">
+          {name.split(' ')[0]}<br />{name.split(' ')[1]}
         </Typography>
-        <div className="profile-acquaintances-list">
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          <Paper elevation={0} className="profile-acquaintance-card">
-            <Avatar
-              src="acquaintance_photo_url.jpg"
-              alt="Тайлеринка Дейлердина"
-              className="profile-acquaintance-avatar"
-            />
-            <Typography className="profile-acquaintance-name">
-              Тайлеринка<br />Дейлердина
-            </Typography>
-          </Paper>
-          {/* Пустые карточки — заглушки */}
-          <div className="empty-card" />
-          <div className="empty-card" />
-          <div className="empty-card" />
-        </div>
-      </div>
-    </div>
+      </Paper>
+    ))}
+
+
+    {/* Пустые карточки — заглушки */}
+    <div className="empty-card" />
+    <div className="empty-card" />
+    <div className="empty-card" />
+  </div>
+  </div>
+  </div>
   )
 }
 

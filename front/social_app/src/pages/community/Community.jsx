@@ -77,7 +77,7 @@ export default function CommunityPage() {
   return (
     <div>
       <Header />
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '100px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '100px', paddingLeft: '20px' }}>
         <CommunityCard 
           community={communityData}
           isSubscribed={isSubscribed}
