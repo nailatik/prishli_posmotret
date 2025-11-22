@@ -35,6 +35,8 @@ function Messages() {
   const fetchDialogs = async () => {
     try {
       const token = localStorage.getItem('access_token')
+      console.log('🔍 Запрашиваем диалоги с токеном:', token ? 'есть' : 'нет')
+      
       const response = await fetch(
         `${API_URL}/messages/dialogs/list`,
         {
@@ -44,12 +46,19 @@ function Messages() {
         }
       )
       
+      console.log('📡 Статус ответа:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ Получены диалоги:', data)
+        console.log('📊 Количество диалогов:', data.length)
         setDialogs(data)
+      } else {
+        const errorText = await response.text()
+        console.error('❌ Ошибка ответа:', response.status, errorText)
       }
     } catch (error) {
-      console.error('Ошибка загрузки диалогов:', error)
+      console.error('❌ Ошибка загрузки диалогов:', error)
     }
   }
 
