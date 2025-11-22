@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams } from 'react-router'
 import Header from '../../components/header/Header'
 import ProfileCard from '../../components/profile/ProfileCard'
 import { Button, Box } from '@mui/material'
-import './noMyProfile.css'
+import './NoMyProfile.css'
 
 export default function NoMyProfile() {
   const { userId } = useParams()

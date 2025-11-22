@@ -1,5 +1,5 @@
 import React from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams } from 'react-router'
 import Profile from './profile/Profile'
 import NoMyProfile from './no_my_profile/NoMyProfile'
 
