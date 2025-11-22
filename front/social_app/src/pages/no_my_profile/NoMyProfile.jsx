@@ -2,60 +2,76 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router'
 import Header from '../../components/header/Header'
 import ProfileCard from '../../components/profile/ProfileCard'
-import { Button, Box } from '@mui/material'
+import { useApi } from '../../hooks/useApi'
 import './NoMyProfile.css'
 
 export default function NoMyProfile() {
   const { userId } = useParams()
+  const { makeRequest } = useApi()
   const [profileData, setProfileData] = useState(null)
+  const [isFriend, setIsFriend] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`http://localhost:8000/api/profile/${userId}`)
-        if (!response.ok) {
-          throw new Error('Ошибка загрузки профиля')
-        }
-        const data = await response.json()
-        setProfileData(data)
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
+  const fetchProfile = async () => {
+    try {
+      setLoading(true)
+      const data = await makeRequest(`profile/${userId}`)
+      setProfileData(data)
+      setIsFriend(data.is_friend || false)
+    } catch (err) {
+      setError(err.message || 'Ошибка загрузки профиля')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchProfile()
   }, [userId])
 
-  const handleAddFriend = () => {
-    alert(`Добавить пользователя ${profileData.first_name} в друзья`)
+  const handleAddFriend = async () => {
+    try {
+      await makeRequest(`profile/${userId}/add-friend`, {
+        method: 'POST'
+      })
+      setIsFriend(true)
+      // Обновляем данные профиля
+      await fetchProfile()
+    } catch (err) {
+      console.error('Ошибка добавления в друзья:', err)
+      alert('Не удалось добавить в друзья')
+    }
   }
 
-  const handleSendMessage = () => {
-    alert(`Написать сообщение пользователю ${profileData.first_name}`)
+  const handleRemoveFriend = async () => {
+    try {
+      await makeRequest(`profile/${userId}/remove-friend`, {
+        method: 'POST'
+      })
+      setIsFriend(false)
+      // Обновляем данные профиля
+      await fetchProfile()
+    } catch (err) {
+      console.error('Ошибка удаления из друзей:', err)
+      alert('Не удалось удалить из друзей')
+    }
   }
 
   if (loading) return <div>Загрузка...</div>
   if (error) return <div>Ошибка: {error}</div>
 
-  // Отрисовка ProfileCard с переданными данными
-  // Добавляем кнопки «Добавить в друзья» и «Написать сообщение»
   return (
     <div>
       <Header />
-      <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
-        <ProfileCard profile={profileData} />
-        <Box sx={{ mt: 2 }}>
-          <Button variant="outlined" color="primary" sx={{ mr: 1 }} onClick={handleAddFriend}>
-            Добавить в друзья
-          </Button>
-          <Button variant="outlined" color="secondary" onClick={handleSendMessage}>
-            Написать сообщение
-          </Button>
-        </Box>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <ProfileCard 
+          profile={profileData} 
+          isOwnProfile={false}
+          isFriend={isFriend}
+          onAddFriend={handleAddFriend}
+          onRemoveFriend={handleRemoveFriend}
+        />
       </div>
     </div>
   )

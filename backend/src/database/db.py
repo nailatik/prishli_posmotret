@@ -250,6 +250,23 @@ async def get_user_friends_by_id(session: AsyncSession, id): # worth to check if
 
     return friends_ids
 
+async def is_friends(session: AsyncSession, user_id: int, friend_id: int):
+    stmt = select(Friendship).where(
+        Friendship.user_id == user_id,
+        Friendship.friend_id == friend_id
+    )
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none() is not None
+
+async def delete_friendship(session: AsyncSession, user_id: int, friend_id: int):
+    stmt = delete(Friendship).where(
+        Friendship.user_id == user_id,
+        Friendship.friend_id == friend_id
+    )
+    result = await session.execute(stmt)
+    await session.commit()
+    return result.rowcount > 0
+
 # Message
 
 async def create_message(session: AsyncSession, sender_id: int, receiver_id: int, content: str = "", picture_url: str = ""):

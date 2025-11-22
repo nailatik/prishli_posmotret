@@ -67,7 +67,7 @@ function Auth() {
     setLoading(true)
 
     try {
-      const data = await makeRequest('sign-up', {
+      const signupData = await makeRequest('sign-up', {
         method: 'POST',
         body: JSON.stringify({
           username: signupUsername,
@@ -92,11 +92,13 @@ function Auth() {
       const loginData = await loginResponse.json()
       localStorage.setItem('access_token', loginData.access_token)
       localStorage.setItem('token_type', loginData.token_type)
-      if (loginData.user_id) {
-        localStorage.setItem('user_id', loginData.user_id.toString())
+      // Используем user_id из loginData или id из signupData
+      const userId = loginData.user_id || signupData.id
+      if (userId) {
+        localStorage.setItem('user_id', userId.toString())
       }
       
-      // Отправляем событие об обновлении авторизации
+      // Отправляем событие об обновлении авторизации для всех компонентов
       window.dispatchEvent(new Event('auth-change'))
       
       // Редирект на главную страницу

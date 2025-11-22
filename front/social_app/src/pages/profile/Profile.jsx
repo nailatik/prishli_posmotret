@@ -4,12 +4,12 @@ import Header from '../../components/header/Header'
 import ProfileCard from '../../components/profile/ProfileCard'
 import './profile.css'
 
-export default function Profile() {
+export default function Profile({ userId, isOwnProfile = true }) {
   const [profileData, setProfileData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
-  const [currentUserId, setCurrentUserId] = useState(() => localStorage.getItem('user_id') || '1')
+  const [currentUserId, setCurrentUserId] = useState(() => userId || localStorage.getItem('user_id') || '1')
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -35,13 +35,13 @@ export default function Profile() {
   }
 
   useEffect(() => {
-    const userId = localStorage.getItem('user_id') || '1'
-    setCurrentUserId(userId)
-    fetchProfile(userId)
+    const userIdToUse = userId || localStorage.getItem('user_id') || '1'
+    setCurrentUserId(userIdToUse)
+    fetchProfile(userIdToUse)
     
     // Слушаем событие обновления авторизации
     const handleAuthChange = () => {
-      const storedUserId = localStorage.getItem('user_id')
+      const storedUserId = userId || localStorage.getItem('user_id')
       if (storedUserId) {
         setCurrentUserId(storedUserId)
         fetchProfile(storedUserId)
@@ -52,7 +52,7 @@ export default function Profile() {
     return () => {
       window.removeEventListener('auth-change', handleAuthChange)
     }
-  }, [])
+  }, [userId])
 
   if (loading) return <div>Загрузка...</div>
   if (error) return <div>Ошибка: {error}</div>
@@ -61,7 +61,7 @@ export default function Profile() {
     <div>
       <Header />
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <ProfileCard profile={profileData} />
+        <ProfileCard profile={profileData} isOwnProfile={isOwnProfile} />
       </div>
     </div>
   )
