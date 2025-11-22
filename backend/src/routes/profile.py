@@ -39,7 +39,7 @@ async def get_profile(
         "last_name": user.last_name,
         "avatar": user.avatar_url,
         "bio": user.bio,
-        "is_own_profile": is_own_profile,   # фронт может использовать для разных представлений
+        "is_own_profile": is_own_profile,
         "posts": [post.to_pydantic() for post in posts],
         "recommended_friends": recommended_users
     }

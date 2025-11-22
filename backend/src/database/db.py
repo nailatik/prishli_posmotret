@@ -426,3 +426,32 @@ async def get_current_user(
 
     return user
 
+from .models.likes import Like
+
+async def toggle_like(session: AsyncSession, user_id: int, post_id: int):
+    # проверяем, есть ли уже лайк
+    stmt = select(Like).where(Like.user_id == user_id, Like.post_id == post_id)
+    result = await session.execute(stmt)
+    like = result.scalar_one_or_none()
+
+    post_stmt = select(Post).where(Post.post_id == post_id)
+    post_result = await session.execute(post_stmt)
+    post = post_result.scalar_one_or_none()
+    if not post:
+        raise ValueError("Post not found")
+
+    if like:
+        # удалить лайк
+        await session.delete(like)
+        post.likes_count -= 1
+        liked = False
+    else:
+        # добавить лайк
+        new_like = Like(user_id=user_id, post_id=post_id)
+        session.add(new_like)
+        post.likes_count += 1
+        liked = True
+
+    await session.commit()
+    return {"liked": liked}
+
