@@ -536,6 +536,8 @@ async def get_user_communities(session: AsyncSession, user_id: int):
     
     return communities
 
+# Функция для получения пользователей по списку id
+
 # Tags todo
 
 # Post Tags todo
