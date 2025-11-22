@@ -9,5 +9,5 @@ def include_routers(app):
     app.include_router(communities_router, prefix='/api')
     app.include_router(profile_router, prefix='/api')
     #app.include_router(messages_router, prefix='/api')
-    app.iclude_router(friends_router, prefix='/api')
+    app.include_router(friends_router, prefix='/api')
 

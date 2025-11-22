@@ -33,20 +33,42 @@ function Communities() {
           throw new Error('Ошибка загрузки друзей')
         }
         const data = await response.json()
-        setAllFriends(data)
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchFriends()
-  }, [])
+              setAllFriends(Array.isArray(data.friends) ? data.friends : [])
+            } catch (err) {
+              setError(err.message)
+            } finally {
+              setLoading(false)
+            }
+          }
+          fetchFriends()
+        }, [])
 
-  const filtered = allFriends.filter(c =>
-    c.name.toLowerCase().includes(query.toLowerCase())
-  )
-  const communitiesToDisplay = filtered.slice(0, displayCount)
+      const filtered = allFriends.filter(c => {
+      const fullName = `${c.first_name || ''} ${c.last_name || ''}`.trim().toLowerCase()
+      const username = (c.username || '').toLowerCase()
+      const q = query.toLowerCase()
+      return fullName.includes(q) || username.includes(q)
+    })
+
+    const communitiesToDisplay = filtered.slice(0, displayCount);
+
+
+
+      {communitiesToDisplay.map(c => (
+        <div
+          className="community-card"
+          key={c.user_id}  // заменил c.id на c.user_id
+          onClick={() => handleCardClick(c)}
+        >
+          <img className="community-avatar" src={c.avatar} alt={c.username || 'avatar'} />
+          <div className="community-name">{c.username || `${c.first_name} ${c.last_name}`}</div> {/* заменил c.name */}
+          <div className="community-desc">
+            {c.bio ? (c.bio.length > 20 ? `${c.bio.slice(0, 20)}...` : c.bio) : ''}
+          </div>
+        </div>
+      ))}
+
+
 
   useEffect(() => {
     if (!loaderRef.current) return
@@ -64,9 +86,10 @@ function Communities() {
     setDisplayCount(PAGE_SIZE)
   }, [query])
 
-  const handleCardClick = (community) => {
-    alert(`Открыть: ${community.name}`)
-  }
+  const handleCardClick = (c) => {
+  alert(`Открыть: ${c.username || `${c.first_name} ${c.last_name}`}`)
+}
+
 
   if (loading) {
     return (
@@ -108,18 +131,18 @@ function Communities() {
           {communitiesToDisplay.map(c => (
             <div
               className="community-card"
-              key={c.id}
+              key={c.user_id}  // правильно user_id
               onClick={() => handleCardClick(c)}
             >
-              <img className="community-avatar" src={c.avatar} alt={c.name} />
-              <div className="community-name">{c.name}</div>
-              <div className="community-desc">
-                {c.description.length > 20
-                  ? `${c.description.slice(0, 20)}...`
-                  : c.description}
-              </div>
+              <img className="community-avatar" src={c.avatar} alt={c.username || 'avatar'} />
+              <div className="community-name">{c.username || `${c.first_name} ${c.last_name}`}</div>
+              {/* Если нужно описание, раскомментируй и исправь так: */}
+              {/* <div className="community-desc">
+                {c.bio ? (c.bio.length > 20 ? `${c.bio.slice(0, 20)}...` : c.bio) : ''}
+              </div> */}
             </div>
           ))}
+
         </div>
         {displayCount < filtered.length && (
           <div ref={loaderRef} className="communities-loader">Загрузка...</div>
