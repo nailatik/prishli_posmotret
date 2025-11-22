@@ -6,8 +6,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from datetime import datetime
-from database.models.user import User
-from database.models.user_data import UserData
+from ..database.models.user import User
+from ..database.models.user_data import UserData
 
 from ..database.db import (
     get_db,
