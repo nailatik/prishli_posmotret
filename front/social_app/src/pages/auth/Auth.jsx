@@ -125,7 +125,7 @@ function Auth() {
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <form onSubmit={handleLogin} autoComplete="off">
             <TextField
-              label="Username"
+              label="Никнейм"
               fullWidth
               value={loginUsername}
               onChange={(e) => setLoginUsername(e.target.value)}
@@ -170,7 +170,7 @@ function Auth() {
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <form onSubmit={handleSignup} autoComplete="off">
             <TextField
-              label="Username"
+              label="Никнейм"
               fullWidth
               value={signupUsername}
               onChange={(e) => setSignupUsername(e.target.value)}
