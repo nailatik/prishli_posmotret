@@ -53,7 +53,7 @@ function Header() {
           <Link to="/messages">Сообщения</Link>
           <Link to="/friends">Мои друзья</Link>
           <Link to="/communities">Сообщества</Link>
-          <a href="https://music.yandex.ru" target="_blank" rel="noopener noreferrer">Музыка</a>
+          <a href="https://music.yandex.ru/track/2328601?utm_source=web&utm_medium=copy_link" target="_blank" rel="noopener noreferrer">Музыка</a>
 
           {isAuthenticated ? (
             <button className="header-auth-btn header-logout-btn" onClick={handleLogout}>
