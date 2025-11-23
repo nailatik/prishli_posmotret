@@ -22,7 +22,7 @@ from ..database.db import (
 
 from ..utils import create_access_token
 
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, get_current_user_optional
 
 from passlib.context import CryptContext
 
@@ -202,8 +202,8 @@ async def login_for_access_token(
 
 @router.get('/posts')
 async def get_posts(
-    user: Annotated[get_current_user, Depends()],
-    session: Annotated[AsyncSession, Depends(get_db)]
+    session: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[dict | None, Depends(get_current_user_optional)] = None
 ):
     try:
         posts = await get_all_posts(session)
@@ -492,8 +492,8 @@ async def create_comment_route(
 @router.get('/posts/{post_id}/comments')
 async def get_comments(
     post_id: int,
-    user: Annotated[get_current_user, Depends()],
-    session: Annotated[AsyncSession, Depends(get_db)]
+    session: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[dict | None, Depends(get_current_user_optional)] = None
 ):
     try:
         comments = await get_comments_by_post_id(session, post_id)
