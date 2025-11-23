@@ -11,6 +11,7 @@ from ..database.db import (
     delete_friendship
 )
 from ..dependencies import get_current_user_optional, get_current_user
+from ..services.user_recommendations.smart_user_selector import SmartUserSelector
 
 router = APIRouter()
 
@@ -45,10 +46,46 @@ async def get_profile(
                 else:
                     # Проверяем, являются ли друзьями
                     is_friend = await is_friends(session, db_user.user_id, user_id)
+        # ДЛЯ НЕАВТОРИЗОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ ИСПОЛЬЗУЕМ username из профиля
+        if not user and db_user_by_id:
+            username = db_user_by_id.username  # ← ДОБАВЬТЕ ЭТУ СТРОКУ!
 
         # Импортируем дефолтный аватар
         from ..database.models.user_data import DEFAULT_AVATAR_URL
         
+        # ДОБАВЛЯЕМ РЕКОМЕНДОВАННЫХ ДРУЗЕЙ
+        recommendations = []
+        if user and not is_own_profile:
+            # Получаем рекомендации для текущего пользователя
+            current_user_id = db_user.user_id
+
+            friends_ids = []  # ID друзей друзей
+            likes_ids = []  # ID из лайков
+            tags_ids = []  # ID по тегам
+            combined_ids = []  # Комбинированный список
+
+            selected_ids = SmartUserSelector.pick_top(
+                friends=friends_ids,
+                likes=likes_ids,
+                tags=tags_ids,
+                combined=combined_ids,
+                top_n=15
+            )
+
+            for rec_user_id in selected_ids:
+                rec_user_data = await get_user_data_by_id(session, rec_user_id)
+                rec_db_user = await get_user_by_id(session, rec_user_id)
+
+                if rec_user_data and rec_db_user:
+                    recommendations.append({
+                        "user_id": rec_user_id,
+                        "first_name": rec_user_data.first_name,
+                        "last_name": rec_user_data.last_name,
+                        "avatar": rec_user_data.avatar_url,
+                        "username": rec_db_user.username,
+                        "is_friend": await is_friends(session, current_user_id, rec_user_id)
+                    })
+
         # Формируем ответ
         profile = {
             "first_name": user_data.first_name if user_data else "",
@@ -56,9 +93,10 @@ async def get_profile(
             "avatar": user_data.avatar_url if user_data and user_data.avatar_url else DEFAULT_AVATAR_URL,
             "bio": user_data.bio if user_data else "",
             "is_own_profile": is_own_profile,
-            "username": username if is_own_profile else None,  # username только для своего профиля
-            "is_friend": is_friend,  # являются ли друзьями
-            "posts": []  # Можно дополнительно получать список постов
+            "username": username if is_own_profile else profile_username,
+            "is_friend": is_friend,
+            "posts": [],
+            "recommendations": recommendations
         }
 
         return profile

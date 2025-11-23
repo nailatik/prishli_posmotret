@@ -19,7 +19,8 @@ def create_access_token(data: dict):
 def verify_token(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, "secret_key", algorithms=["HS256"])
-    except HTTPException:
-        raise HTTPException(status_code=404, details=f"{payload.get("sub")} has problem with verification")
-
-    return payload
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")

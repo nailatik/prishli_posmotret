@@ -60,7 +60,7 @@ function Header() {
             </button>
           ) : (
             <button className="header-auth-btn header-login-btn" onClick={handleLogin}>
-              Войти/Зарегистрироваться
+              Авторизоваться
             </button>
           )}
         </nav>
